@@ -1,3 +1,6 @@
+=== Improved UniTimeTable ===
+This project aims to improve UniTimeTable project, for the needs of College of Engineering Pune (COEP). The description of the original project follows. 
+
 === UniTimetable ===
 Contributors: antrouss, kokkoras
 Donate link: -
