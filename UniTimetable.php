@@ -79,6 +79,9 @@ function utt_activate(){
             teacherID smallint UNSIGNED NOT NULL AUTO_INCREMENT,
             surname varchar(35) NOT NULL COMMENT 'teacher\'s surname',
             name varchar(35) NULL COMMENT 'teacher\'s name',
+            minWorkLoad smallint UNSIGNED NOT NULL COMMENT 'minimum workload for teacher',
+            maxWorkLoad smallint UNSIGNED NOT NULL COMMENT 'maximum workload for teacher',
+            assignedWorkLoad smallint UNSIGNED NOT NULL COMMENT 'actual assigned workload for teacher',
             PRIMARY KEY  (teacherID),
             UNIQUE KEY `unique_teacher` (surname ASC, name ASC))
             ENGINE = InnoDB

@@ -112,7 +112,7 @@ function utt_create_lectures_page(){
         </div>
         <div class="element firstInRow">
             <?php _e("Teacher:","UniTimetable"); ?><br/>
-            <select name="teacher" id="teacher" class="dirty">
+            <select name="teacher" id="teacher" class="dirty" onchange="loadWorkHours();">
                 <?php
                 $teachersTable=$wpdb->prefix."utt_teachers";
                 $teachers = $wpdb->get_results( "SELECT * FROM $teachersTable ORDER BY surname, name");
@@ -142,6 +142,20 @@ function utt_create_lectures_page(){
                 }
                 ?>
             </select>
+        </div>
+        <div id = "workloaddiv">
+        <div class="element firstInRow datetimeElements">
+            Min Workload:<br/>
+            <input type="text" name="minworkload" disabled="true" id="minwork" class="dirty" size="20"/>
+        </div>
+        <div class="element datetimeElements">
+            Max Workload:<br/>
+            <input type="text" name="maxworkload" disabled="true" id="maxwork" class="dirty" size="20"/>
+        </div>
+        <div class="element datetimeElements">
+            Assigned Workload:<br/>
+            <input type="text" name="assignedworkload" disabled="true" id="assignedwork" class="dirty" size="20"/>
+        </div>
         </div>
         <div class="element firstInRow datetimeElements">
             <?php _e("Date:","UniTimetable"); ?>
@@ -258,6 +272,35 @@ function utt_load_subjects(){
     die();
 }
 
+//load working hours when teacher is selected
+add_action('wp_ajax_utt_load_work_hour', 'utt_load_work_hour');
+function utt_load_work_hour(){
+    $teacher = $_GET['teacherName'];
+    global $wpdb;
+    $teachersTable=$wpdb->prefix."utt_teachers";
+    $safeSql = $wpdb->prepare("SELECT * FROM $teachersTable WHERE teacherID = '$teacher';");
+    $workload = $wpdb->get_results($safeSql);
+    foreach($workload as $wk){
+        echo "<div id = \"workloaddiv\">
+        <div class=\"element firstInRow datetimeElements\">
+            Min Workload:<br/>
+            <input type=\"text\" value='$wk->minWorkLoad' name=\"minworkload\" disabled=\"true\" id=\"minwork\" class=\"dirty\" size=\"20\"/>
+        </div>
+        <div class=\"element datetimeElements\">
+            Max Workload:<br/>
+            <input type=\"text\" value='$wk->maxWorkLoad' name=\"maxworkload\" disabled=\"true\" id=\"maxwork\" class=\"dirty\" size=\"20\"/>
+        </div>
+        <div class=\"element datetimeElements\">
+            Assigned Workload:<br/>
+            <input type=\"text\" value='$wk->assignedWorkLoad' name=\"assignedworkload\" disabled=\"true\" id=\"assignedwork\" class=\"dirty\" size=\"20\"/>
+        </div>
+        </div>";
+        if($wk->assignedWorkLoad > $wk->maxWorkLoad)
+            echo "<script type = \"text/javascript\">jQuery(\"#messages\").html(\"<div id='message' class='error'>Warning: Too much workload</div>\");</script>";
+    }
+    die();
+}
+
 //ajax response insert-update lecture
 add_action('wp_ajax_utt_insert_update_lecture','utt_insert_update_lecture');
 function utt_insert_update_lecture(){
@@ -271,8 +314,12 @@ function utt_insert_update_lecture(){
     $time=$_GET['time'];
     $endTime=$_GET['endTime'];
     $weeks=$_GET['weeks'];
+    $maxwork=$_GET['maxwork'];
+    $minwork=$_GET['minWork'];
+    $assignedwork=$_GET['assignedwork'];
     $lecturesTable=$wpdb->prefix."utt_lectures";
     $eventsTable=$wpdb->prefix."utt_events";
+    $teachersTable=$wpdb->prefix."utt_teachers";
     //is insert
     if($lectureID==0){
         //transaction in order to cancel inserts if something goes wrong
@@ -288,6 +335,7 @@ function utt_insert_update_lecture(){
                
             $datetime = $usedDate." ".$time;
             $endDatetime = $usedDate." ".$endTime;
+            $assignedwork = $assignedwork + ($endTime - $time);
             //check if there is conflict
             $busyTeacher = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE teacherID=%d AND %s<end AND %s>start;",$teacher,$datetime,$endDatetime));
             $busyClassroom1 = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE classroomID=%d AND %s<end AND %s>start;",$classroom,$datetime,$endDatetime));
@@ -299,6 +347,8 @@ function utt_insert_update_lecture(){
                 break;
             }else{
                 $safeSql = $wpdb->prepare("INSERT INTO $lecturesTable (groupID, classroomID, teacherID, start, end) VALUES( %d, %d, %d, %s, %s)",$group,$classroom,$teacher,$datetime,$endDatetime);
+                $wpdb->query($safeSql);
+                $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $teacher);
                 $wpdb->query($safeSql);
             }
         }
@@ -474,6 +524,7 @@ function utt_delete_lecture(){
     $deleteAll = $_GET['delete_all'];
     $lectureID = $_GET['lecture_id'];
     $lecturesTable=$wpdb->prefix."utt_lectures";
+    $teachersTable=$wpdb->prefix."utt_teachers";
     $safeSql = $wpdb->prepare("SELECT * FROM $lecturesTable WHERE lectureID=%d",$lectureID);
     $lecture = $wpdb->get_row($safeSql);
     //if delete all is 1, delete all lectures for this group
@@ -483,6 +534,14 @@ function utt_delete_lecture(){
     //else delete only this lecture
     }else{
         $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
+        $wpdb->query($safeSql);
+
+        $enddate = explode(" ", $lecture->end);
+        $startdate = explode(" ", $lecture->start);
+        $diff = $enddate[1] - $startdate[1];
+        $assignedwork = $lecture->assignedWorkLoad - $diff;
+    
+        $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $lecture->teacherID);
         $wpdb->query($safeSql);
     }
     die();

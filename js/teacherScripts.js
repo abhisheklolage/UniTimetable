@@ -30,7 +30,7 @@ function deleteTeacher(teacherID) {
    return false;
 }
 //edit function
-function editTeacher(teacherID, teacherSurName, teacherName) {
+function editTeacher(teacherID, teacherSurName, teacherName, minWorkLoad, maxWorkLoad) {
    //if form is being completed it does not let you edit
    if (isDirty==1) {
       alert(teacherStrings.editForbidden);
@@ -42,6 +42,9 @@ function editTeacher(teacherID, teacherSurName, teacherName) {
    document.getElementById('teacherid').value=teacherID;
    document.getElementById('teacherTitle').innerHTML=teacherStrings.editTeacher;
    document.getElementById('clearTeacherForm').innerHTML=teacherStrings.cancel;
+   document.getElementById('minwork').value=minWorkLoad;
+   document.getElementById('maxwork').value=maxWorkLoad;
+   
    jQuery('#message').remove();
    isDirty = 1;
    return false;
@@ -54,8 +57,11 @@ jQuery(function ($) {
       var teacherID = $('#teacherid').val();
       var teacherName = $('#firstname').val();
       var teacherSurName = $('#lastname').val();
+      var teacherMinWork = $('#minwork').val();
+      var teacherMaxWork = $('#maxwork').val();
       var regexName = /^[α-ωΑ-ΩA-Za-zΆ-Ώά-ώ0-9_\s-.\/]{0,35}$/;
       var regexSurName = /^[α-ωΑ-ΩA-Za-zΆ-Ώά-ώ0-9_\s-.\/]{3,35}$/;
+      var regexHour = /^[0-9]{1,2}$/;
       var success = 0;
       //validation
       if (!regexSurName.test(teacherSurName)) {
@@ -66,12 +72,18 @@ jQuery(function ($) {
          alert(teacherStrings.nameVal);
          return false;
       }
+      if (!regexHour.test(teacherMinWork) || !regexHour.test(teacherMaxWork)){
+         alert(teacherStrings.minmaxWork);
+         return false;
+      }
       //ajax data
       var data = {
          action: 'utt_insert_update_teacher',
          teacher_id: teacherID,
          teacher_name: teacherName,
-         teacher_surname: teacherSurName
+         teacher_surname: teacherSurName,
+         teacher_min_work: teacherMinWork,
+         teacher_max_work: teacherMaxWork
       };
       //ajax call
       $.get('admin-ajax.php' , data, function(data){
@@ -89,6 +101,8 @@ jQuery(function ($) {
             jQuery('#teacherid').val(0);
             jQuery('#firstname').val("");
             jQuery('#lastname').val("");
+            jQuery('#minwork').val("");
+            jQuery('#maxwork').val("");
             jQuery('#teacherTitle').html(teacherStrings.insertTeacher);
             jQuery('#clearTeacherForm').html(teacherStrings.reset);
             isDirty = 0;
@@ -122,6 +136,8 @@ jQuery(function ($) {
       $('#teacherid').val(0);
       $('#clearTeacherForm').html(teacherStrings.reset);
       $('#message').remove();
+      $('#minwork').val("");
+      $('#maxwork').val("");
       isDirty = 0;
       return false;
    })

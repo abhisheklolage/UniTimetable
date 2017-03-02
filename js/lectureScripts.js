@@ -131,6 +131,7 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    endTime = endTime[0]+":"+endTime[1];
    jQuery('#endTime').val(endTime);
    jQuery('#clearLectureForm').html(lectureStrings.cancel);
+   loadWorkHours();
 }
 //load groups combo-box depending on period and subject. Selected parameter is used for autofill on edit
 function loadGroups(selected, period, subject) {
@@ -167,6 +168,20 @@ function loadSubjects(selected){
       //load combo-box
       jQuery('#subjects').html(data);
    });
+}
+//load work hours when teacher is selected
+function loadWorkHours(){
+   teacherName = jQuery('#teacher').val();
+   //ajax data
+   var data = {
+      action: 'utt_load_work_hour',
+      teacherName: teacherName
+   };
+   //ajax call
+   jQuery.get('admin-ajax.php', data, function(data){
+      jQuery('#workloaddiv').html(data);
+   });
+   jQuery('#messages').html("");
 }
 //runs when filterSelect2 is changed
 function filterFunction() {
@@ -299,6 +314,9 @@ jQuery(function ($) {
       var time = $('#time').val();
       var endTime = $('#endTime').val();
       var weeks = $('#weeks').val();
+      var maxwork = $('#maxwork').val();
+      var minwork = $('#minwork').val();
+      var assignedwork = $('#assignedwork').val();
       var success = 0;
       //validation
       if (period == 0) {
@@ -350,7 +368,10 @@ jQuery(function ($) {
          date: date,
          time: time,
          endTime: endTime,
-         weeks: weeks
+         weeks: weeks,
+         minwork: minwork,
+         maxwork: maxwork,
+         assignedwork: assignedwork
       };
       //ajax call
       $.get('admin-ajax.php' , data, function(data){
@@ -372,6 +393,7 @@ jQuery(function ($) {
                jQuery('.weekDiv').show();
                $('#clearLectureForm').html(lectureStrings.reset);
                setTimeout(loadCalendar, 500);
+               loadWorkHours();
                isDirty = 0;
             //fail
             }else{
@@ -402,6 +424,9 @@ jQuery(function ($) {
       $('#weeks').val(1);
       $('#clearLectureForm').html(lectureStrings.reset);
       $('#message').remove();
+      $('#minwork').val("");
+      $('#maxwork').val("");
+      $('#assignedwork').val("");
       isDirty = 0;
       return false;
    })
