@@ -52,63 +52,77 @@ function utt_lecture_scripts(){
 }
 
 function utt_create_lectures_page(){
-    ?>
+?>
     <div class="wrap">
-    <h2 id="lectureTitle"><?php _e("Insert Lecture","UniTimetable"); ?></h2>
-    <div id="dialog-confirm" title="<?php _e("Delete all Lectures for this Group?","UniTimetable"); ?>">
-        <p></p>
-    </div>
-    <form action="" name="lectureForm" method="post">
-        <input type="hidden" name="lectureID" id="lectureID" value=0 />
-        <div class="element firstInRow">
-        <?php _e("Period:","UniTimetable"); ?><br/>
-        <select name="period" id="period" class="dirty">
-            <?php
-            //fill select with periods
-            global $wpdb;
-            $periodsTable=$wpdb->prefix."utt_periods";
-            $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
-            echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-            foreach($periods as $period){
-                if($period->semester == "W"){
-                    $semester = __("W","UniTimetable");
-                }else{
-                    $semester = __("S","UniTimetable");
-                }
-                echo "<option value='$period->periodID'>$period->year $semester</option>";
-            }
-            ?>
-        </select>
-        </div>
-        <div class="element">
-            <?php _e("Curriculum Semester:","UniTimetable"); ?><br/>
-            <select name="semester" id="semester" class="dirty" onchange="loadSubjects(0);">
-                <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                <?php
-                //fill select with semester numbers
-                for( $i=1 ; $i<11 ; $i++ ){
-                    echo "<option value='$i'>$i</option>";
-                }
-                ?>
-            </select>
-        </div>
-        <div class="element firstInRow">
-        <?php _e("Subject:","UniTimetable"); ?><br/>
-        <div id="subjects">
-            <!-- place subjects into select when period and semester selected -->
-        <select name="subject" id="subject" class="dirty">
-            <option value='0'><?php _e("- select -","UniTimetable"); ?></option>
-        </select>
-        </div>
-        </div>
-        <div class="element">
-            <?php _e("Group:","UniTimetable"); ?><br/>
-            <div id="groups">
-                <!-- place groups when subject selected -->
-                <select name="group" id="group" class="dirty">
-                    <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                </select>
+	<h2 id="lectureTitle"><?php _e("Insert Lecture","UniTimetable"); ?></h2>
+	<div id="dialog-confirm" title="<?php _e("Delete all Lectures for this Group?","UniTimetable"); ?>">
+	    <p></p>
+	</div>
+	<form action="" name="lectureForm" method="post">
+	    <input type="hidden" name="lectureID" id="lectureID" value=0 />
+	    <div class="element firstInRow">
+		<?php _e("Period:","UniTimetable"); ?><br/>
+		<select name="period" id="period" class="dirty">
+		    <?php
+		    //fill select with periods
+		    global $wpdb;
+		    $periodsTable=$wpdb->prefix."utt_periods";
+		    $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
+		    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+		    foreach($periods as $period){
+			// if($period->semester == "W"){
+			//     $semester = __("W","UniTimetable");
+			// }else{
+			//     $semester = __("S","UniTimetable");
+			// }
+			$semester = $period->semester;
+			echo "<option value='$period->periodID'>$period->year $semester</option>";
+		    }
+		    ?>
+		</select>
             </div>
+            <div class="element">
+		<?php _e("Curriculum Semester:","UniTimetable"); ?><br/>
+		<select name="semester" id="semester" class="dirty" onchange="loadSubjects(0);">
+                    <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
+                    <?php
+                    //fill select with semester numbers
+                    for( $i=1 ; $i<11 ; $i++ ){
+			echo "<option value='$i'>$i</option>";
+                    }
+                    ?>
+		</select>
+            </div>
+            <div class="element firstInRow">
+		<?php _e("Subject:","UniTimetable"); ?><br/>
+		<div id="subjects">
+		    <!-- place subjects into select when period and semester selected -->
+		    <select name="subject" id="subject" class="dirty">
+			<option value='0'><?php _e("- select -","UniTimetable"); ?></option>
+		    </select>
+		</div>
+            </div>
+            <div class="element">
+		<?php _e("Group:","UniTimetable"); ?><br/>
+		<div id="groups">
+                    <!-- place groups when subject selected -->
+                    <select name="group" id="group" class="dirty">
+			<option value="0"><?php _e("- select -","UniTimetable"); ?></option>
+                    </select>
+		</div>
+            </div>
+            <div class="element firstInRow">
+		<?php _e("Teacher:","UniTimetable"); ?><br/>
+		<select name="teacher" id="teacher" class="dirty">
+                    <?php
+                    $teachersTable=$wpdb->prefix."utt_teachers";
+                    $teachers = $wpdb->get_results( "SELECT * FROM $teachersTable ORDER BY surname, name");
+                    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+                    foreach($teachers as $teacher){
+			echo "<option value='$teacher->teacherID'>$teacher->surname $teacher->name</option>";
+                    }
+                    ?>
+		</select>
         </div>
         <div class="element firstInRow">
             <?php _e("Teacher:","UniTimetable"); ?><br/>
@@ -180,65 +194,108 @@ function utt_create_lectures_page(){
                 ?>
             </select>
         </div>
+            <div class="element">
+		<?php _e("Classroom:","UniTimetable"); ?><br/>
+		<select name="classroom" id="classroom" class="dirty">
+                    <?php
+                    //fill select with classrooms
+                    $classroomsTable=$wpdb->prefix."utt_classrooms";
+                    $classrooms = $wpdb->get_results( "SELECT * FROM $classroomsTable ORDER BY name");
+                    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+                    //translate classroom type
+                    foreach($classrooms as $classroom){
+			if($classroom->type == "Lecture"){
+                            $classroomType = __("Lecture","UniTimetable");
+			}else{
+                            $classroomType = __("Laboratory","UniTimetable");
+			}
+			echo "<option value='$classroom->classroomID'>$classroom->name $classroomType</option>";
+                    }
+                    ?>
+		</select>
+            </div>
+            <div class="element firstInRow datetimeElements">
+		<?php _e("Date:","UniTimetable"); ?>
+		<br/>
+		<input type="text" name="date" id="date" class="dirty" size="14"/>
+            </div>
+            <div class="element datetimeElements">
+		<?php _e("Start time:","UniTimetable"); ?><br/>
+		<input name="time" id="time" class="dirty" value="8:00" size="10"/>
+            </div>
+            <div class="element datetimeElements">
+		<?php _e("End time:","UniTimetable"); ?><br/>
+		<input name="endTime" id="endTime" class="dirty" value="10:00" size="10"/>
+            </div>
+            <div class="element weekDiv">
+		<?php _e("Number of weeks:","UniTimetable"); ?><br/>
+		<select name="weeks" id="weeks" class="dirty">
+                    <?php
+                    for( $i=1 ; $i<26 ; $i++ ){
+			echo "<option value='$i'>$i</option>";
+                    }
+                    ?>
+		</select>
+            </div>
             <div id="secondaryButtonContainer">
                 <input type="submit" value="<?php _e("Submit","UniTimetable"); ?>" id="insert-updateLecture" class="button-primary"/>
                 <a href='#' class='button-secondary' id="clearLectureForm"><?php _e("Reset","UniTimetable"); ?></a>
             </div>
-    </form>
-    <div id="messages"></div>
-    <div id="filters">
-        <span id="filter1">
-            <?php _e("View per:","UniTimetable"); ?>&nbsp;
-            <select name="filterSelect1" id="filterSelect1">
-                <option value="semester" selected="selected"><?php _e("Semester","UniTimetable"); ?></option>
-                <option value="teacher"><?php _e("Teacher","UniTimetable"); ?></option>
-                <option value="classroom"><?php _e("Classroom","UniTimetable"); ?></option>
-            </select>
-        </span>
-        <span id="filter2">
-            <select name="filterSelect2" id="filterSelect2" onchange='filterFunction();'>
-                <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                <?php for($i=1;$i<11;$i++){
-                    if($i==1){
-                        $selected = "selected='selected'";
-                    }else{
-                        $selected = "";
-                    }
-                    echo "<option value='$i' $selected>$i</option>";
-                } ?>
-            </select>
-        </span>
-        <img id="loadingImg" src="<?php echo plugins_url('icons/spinner.gif', __FILE__); ?>"/>
+	</form>
+	<div id="messages"></div>
+	<div id="filters">
+            <span id="filter1">
+		<?php _e("View per:","UniTimetable"); ?>&nbsp;
+		<select name="filterSelect1" id="filterSelect1">
+                    <option value="semester" selected="selected"><?php _e("Semester","UniTimetable"); ?></option>
+                    <option value="teacher"><?php _e("Teacher","UniTimetable"); ?></option>
+                    <option value="classroom"><?php _e("Classroom","UniTimetable"); ?></option>
+		</select>
+            </span>
+            <span id="filter2">
+		<select name="filterSelect2" id="filterSelect2" onchange='filterFunction();'>
+                    <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
+                    <?php for($i=1;$i<11;$i++){
+			if($i==1){
+                            $selected = "selected='selected'";
+			}else{
+                            $selected = "";
+			}
+			echo "<option value='$i' $selected>$i</option>";
+                    } ?>
+		</select>
+            </span>
+            <img id="loadingImg" src="<?php echo plugins_url('icons/spinner.gif', __FILE__); ?>"/>
+	</div>
+	<div id="calendar"></div>
     </div>
-    <div id="calendar"></div>
-    </div>
-    <?php
+<?php
 }
 //load groups combo-box when period and subject selected
 add_action('wp_ajax_utt_load_groups','utt_load_groups');
 function utt_load_groups(){
-        $period = $_GET['period'];
-        $subject = $_GET['subject'];
-        if(isset($_GET['selected'])){
-            $selected = $_GET['selected'];
+    $period = $_GET['period'];
+    $subject = $_GET['subject'];
+    if(isset($_GET['selected'])){
+        $selected = $_GET['selected'];
+    }
+    global $wpdb;
+    $groupsTable = $wpdb->prefix."utt_groups";
+    $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d AND subjectID=%d ORDER BY groupName;",$period,$subject);
+    $groups = $wpdb->get_results($safeSql);
+    echo "<select name='group' id='group' class='dirty'>";
+    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+    foreach($groups as $group){
+        //choose group selected when edit
+        if($selected==$group->groupID){
+            $select = "selected='selected'";
+        }else{
+            $select = "";
         }
-        global $wpdb;
-        $groupsTable = $wpdb->prefix."utt_groups";
-        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d AND subjectID=%d ORDER BY groupName;",$period,$subject);
-        $groups = $wpdb->get_results($safeSql);
-        echo "<select name='group' id='group' class='dirty'>";
-        echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-        foreach($groups as $group){
-            //choose group selected when edit
-            if($selected==$group->groupID){
-                $select = "selected='selected'";
-            }else{
-                $select = "";
-            }
-            echo "<option value='$group->groupID' $select>$group->groupName</option>";
-        }
-        echo "</select>";
-        die();
+        echo "<option value='$group->groupID' $select>$group->groupName</option>";
+    }
+    echo "</select>";
+    die();
 }
 //load subjects combo-box when period and semester selected
 add_action('wp_ajax_utt_load_subjects','utt_load_subjects');
@@ -340,7 +397,7 @@ function utt_insert_update_lecture(){
             //adds record to selected week, next loop adds to next week etc...
             $d->modify('+'.$j.' weeks');
             $usedDate = $d->format('y-m-d');
-               
+            
             $datetime = $usedDate." ".$time;
             $endDatetime = $usedDate." ".$endTime;
             //check if there is conflict
@@ -364,12 +421,12 @@ function utt_insert_update_lecture(){
                 $wpdb->query($safeSql);
             $wpdb->query('COMMIT');
             echo 1;
-        //if exists is 1 rollback
+            //if exists is 1 rollback
         }else{
             $wpdb->query('ROLLBACK');
             echo 0;
         }
-    //update
+	//update
     }else{
         $datetime = $date . " " . $time;
         $endDatetime = $date . " " . $endTime;
@@ -401,7 +458,7 @@ function utt_json_calendar(){
     $end = $_POST['end'];
     $lecturesTable = $wpdb->prefix."utt_lectures";
     switch ($viewType){
-        //add to sql depending on filters
+            //add to sql depending on filters
         case "semester":
             $safeSql = $wpdb->prepare("SELECT * FROM $lecturesView WHERE DATE(start) BETWEEN %s AND %s AND semester=%d;",$start,$end,$viewFilter);
             break;
@@ -546,7 +603,7 @@ function utt_delete_lecture(){
     
         $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $lecture->teacherID);
         $wpdb->query($safeSql);
-    //else delete only this lecture
+	//else delete only this lecture
     }else{
         $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
         $wpdb->query($safeSql);

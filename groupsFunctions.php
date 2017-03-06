@@ -28,79 +28,74 @@ function utt_group_scripts(){
 //groups page
 function utt_create_groups_page(){
     //group form
-    ?>
+?>
     <div class="wrap">
-        <h2 id="groupTitle"> <?php _e("Insert Group","UniTimetable"); ?> </h2>
-        <form action="" name="groupForm" method="post">
-            <input type="hidden" name="groupID" id="groupID" value=0 />
-            <div class="element firstInRow">
-            <?php _e("Period:","UniTimetable"); ?><br/>
-            <select name="period" id="period" class="dirty">
-                <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                <?php
-                global $wpdb;
-                //show registered periods
-                $periodsTable=$wpdb->prefix."utt_periods";
-                $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
-                //translate periods semester
-                foreach($periods as $period){
-                    if($period->semester == "W"){
-                        $semester = __("W","UniTimetable");
-                    }else{
-                        $semester = __("S","UniTimetable");
+	<h2 id="groupTitle"> <?php _e("Insert Group","UniTimetable"); ?> </h2>
+	<form action="" name="groupForm" method="post">
+	    <input type="hidden" name="groupID" id="groupID" value=0 />
+	    <div class="element firstInRow">
+		<?php _e("Period:","UniTimetable"); ?><br/>
+		<select name="period" id="period" class="dirty">
+                    <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
+                    <?php
+                    global $wpdb;
+                    //show registered periods
+                    $periodsTable=$wpdb->prefix."utt_periods";
+                    $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
+                    //translate periods semester
+                    foreach($periods as $period){
+			echo "<option value='$period->periodID'>$period->year $period->semester</option>";
                     }
-                    echo "<option value='$period->periodID'>$period->year $semester</option>";
-                }
-                ?>
-            </select>
+                    ?>
+		</select>
             </div>
             <div class="element">
-            <?php _e("Semester:","UniTimetable"); ?><br/>
-            <select name="semester" id="semester" class="dirty" onchange="loadSubjects(0);">
-                <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                <?php
-                //show semester numbers
-                for( $i=1 ; $i<11 ; $i++ ){
-                    echo "<option value='$i'>$i</option>";
-                }
-                ?>
-            </select>
+		<?php _e("Semester:","UniTimetable"); ?><br/>
+		<select name="semester" id="semester" class="dirty" onchange="loadSubjects(0);">
+                    <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
+                    <?php
+                    //show semester numbers
+                    for( $i=1 ; $i<11 ; $i++ ){
+			echo "<option value='$i'>$i</option>";
+                    }
+                    ?>
+		</select>
             </div>
             <div class="element firstInRow">
-            <?php _e("Subject:","UniTimetable"); ?><br/>
-            <!-- load subjects when semester number is selected -->
-            <div id="subjects">
-            <select name="subject" id="subject" class="dirty">
-                <option value='0'><?php _e("- select -","UniTimetable"); ?></option>
-            </select>
-            </div>
+		<?php _e("Subject:","UniTimetable"); ?><br/>
+		<!-- load subjects when semester number is selected -->
+		<div id="subjects">
+		    <select name="subject" id="subject" class="dirty">
+			<option value='0'><?php _e("- select -","UniTimetable"); ?></option>
+		    </select>
+		</div>
             </div>
             <div class="element">
-            <!-- select number of groups to be created -->
-            <?php _e("Number of Groups:","UniTimetable"); ?><br/>
-            <select name="groupsNumber" id="groupsNumber" class="dirty">
-                <?php
-                for($i=1;$i<16;$i++){
-                    echo "<option value=$i>$i</option>";
-                }
-                ?>
-            </select>
+		<!-- select number of groups to be created -->
+		<?php _e("Number of Groups:","UniTimetable"); ?><br/>
+		<select name="groupsNumber" id="groupsNumber" class="dirty">
+                    <?php
+                    for($i=1;$i<16;$i++){
+			echo "<option value=$i>$i</option>";
+                    }
+                    ?>
+		</select>
             </div>
             <div class="element firstInRow groupsName">
-            <?php _e("Name of Groups (Prefix):","UniTimetable"); ?><br/>
-            <!-- prefix of groups' names -->
-            <input type="text" name="groupsName" id="groupsName" class="dirty" value="<?php _e("Group","UniTimetable"); ?>"/>
+		<?php _e("Name of Groups (Prefix):","UniTimetable"); ?><br/>
+		<!-- prefix of groups' names -->
+		<input type="text" name="groupsName" id="groupsName" class="dirty" value="<?php _e("Group","UniTimetable"); ?>"/>
             </div>
             <div class="element counterStart">
-            <?php _e("Counter Starτ:","UniTimetable"); ?>
-            <!-- starting number of groups that will be created -->
-            <select name="counterStart" id="counterStart" class="dirty">
-                <?php
-                for($i=1;$i<16;$i++){
-                    echo "<option value=$i>$i</option>";
-                }
-                ?>
-            </select>
+		<?php _e("Counter Starτ:","UniTimetable"); ?>
+		<!-- starting number of groups that will be created -->
+		<select name="counterStart" id="counterStart" class="dirty">
+                    <?php
+                    for($i=1;$i<16;$i++){
+			echo "<option value=$i>$i</option>";
+                    }
+                    ?>
+		</select>
             </div>
             <div id="secondaryButtonContainer">
                 <input type="submit" value="<?php _e("Submit","UniTimetable"); ?>" id="insert-updateGroup" class="button-primary"/>
@@ -111,60 +106,48 @@ function utt_create_groups_page(){
         <div id="messages"></div>
         <!-- filters to filter shown groups -->
         <span id="filter1">
-    <?php _e("Period:","UniTimetable"); ?>
-    <select name="periodFilter" id="periodFilter" onchange="viewGroups();">
-        <?php
-        $periodsTable=$wpdb->prefix."utt_periods";
-        $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
-        //current date
-        $date = date("Y-m-d");
-        echo "<option value=''>".__("- select -","UniTimetable")."</option>";
-        foreach($periods as $period){
-                //echo current and next year and select current
-                $startWinter = $period->year."-09-01";
-                $nextYear = $period->year +1;
-                $endWinter = $nextYear . "-03-01";
-                $startSpring = $period->year . "-03-01";
-                $selected = "";
-                if($date >= $startWinter && $date < $endWinter && $period->semester == "W"){
-                        $selected = "selected='selected'";
-                        $periodID = $period->periodID;
-                }else if($date >= $startSpring && $date<$startWinter && $period->semester == "S"){
-                        $selected = "selected='selected'";
-                        $periodID = $period->periodID;
-                }
-                if($period->semester == "W"){
-                    $semester = __("W","UniTimetable");
-                }else{
-                    $semester = __("S","UniTimetable");
-                }
-            echo "<option value='$period->periodID' $selected>$period->year $semester</option>";
-        }
-        ?>
-    </select>
-    </span>
-    <span id="filter2">
-        <?php _e("Semester:","UniTimetable"); ?>
-        <select name="semesterFilter" id="semesterFilter" onchange="viewGroups();">
-            <option value="0"><?php _e("All","UniTimetable"); ?></option>
-            <?php
-            for($i=1;$i<11;$i++){
-                //select 1st semester
-                if($i == 1){
-                    $selected = "selected='selected'";
-                }else{
-                    $selected = "";
-                }
-                echo "<option value='$i' $selected>$i</option>";
-            }
-            ?>
-        </select>
-    </span>
-    <!-- place to view inserted groups -->
-    <div id="groupsResults">
-        <?php utt_view_groups(); ?>
-    </div>
-    <?php
+	    <?php _e("Period:","UniTimetable"); ?>
+	    <select name="periodFilter" id="periodFilter" onchange="viewGroups();">
+		<?php
+		$periodsTable=$wpdb->prefix."utt_periods";
+		$periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
+		//current date
+		$date = date("Y-m-d");
+		echo "<option value=''>".__("- select -","UniTimetable")."</option>";
+		foreach($periods as $period){
+		    //echo current and next year and select current
+		    $startDate = $period->year . "-01-01";
+		    $selected = "";
+		    $selected = "selected='selected'";
+		    $periodID = $period->periodID;
+		    $semester = $period->semester;
+		    echo "<option value='$period->periodID' $selected>$period->year $semester</option>";
+		}
+		?>
+	    </select>
+	</span>
+	<span id="filter2">
+            <?php _e("Semester:","UniTimetable"); ?>
+            <select name="semesterFilter" id="semesterFilter" onchange="viewGroups();">
+		<option value="0"><?php _e("All","UniTimetable"); ?></option>
+		<?php
+		for($i=1;$i<11;$i++){
+                    //select 1st semester
+                    if($i == 1){
+			$selected = "selected='selected'";
+                    }else{
+			$selected = "";
+                    }
+                    echo "<option value='$i' $selected>$i</option>";
+		}
+		?>
+            </select>
+	</span>
+	<!-- place to view inserted groups -->
+	<div id="groupsResults">
+            <?php utt_view_groups(); ?>
+	</div>
+<?php
 }
 
 //ajax response view groups
@@ -175,21 +158,14 @@ function utt_view_groups(){
     if(isset($_GET['period_id'])){
         $periodID = $_GET['period_id'];
         $semester = $_GET['semester'];
-    //if first time loaded, show results for current period and 1st semester
+	//if first time loaded, show results for current period and 1st semester
     }else{
         $periodsTable=$wpdb->prefix."utt_periods";
         $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
         $date = date("Y-m-d");
         foreach($periods as $period){
-            $startWinter = $period->year."-09-01";
-            $nextYear = $period->year +1;
-            $endWinter = $nextYear . "-03-01";
-            $startSpring = $period->year . "-03-01";
-            if($date >= $startWinter && $date < $endWinter && $period->semester == "W"){
-                $periodID = $period->periodID;
-            }else if($date >= $startSpring && $date<$startWinter && $period->semester == "S"){
-                $periodID = $period->periodID;
-            }
+            $startDate = $period->year . "-01-01";
+            
         }
         $semester = 1;
     }
@@ -207,25 +183,25 @@ function utt_view_groups(){
         $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable, $subjectsTable WHERE $groupsTable.subjectID=$subjectsTable.subjectID AND periodID=%d AND semester=%d ORDER BY title, type, groupName",$periodID,$semester);
     }
     $groups = $wpdb->get_results($safeSql);
-    ?>
-        <!-- show table of groups -->
-        <table class="widefat bold-th">
-            <thead>
-                <tr>
-                    <th><?php _e("Subject","UniTimetable"); ?></th>
-                    <th><?php _e("Group","UniTimetable"); ?></th>
-                    <th><?php _e("Actions","UniTimetable"); ?></th>
-                </tr>
-            </thead>
-            <tfoot>
-                <tr>
-                    <th><?php _e("Subject","UniTimetable"); ?></th>
-                    <th><?php _e("Group","UniTimetable"); ?></th>
-                    <th><?php _e("Actions","UniTimetable"); ?></th>
-                </tr>
-            </tfoot>
-            <tbody>
-    <?php
+?>
+<!-- show table of groups -->
+<table class="widefat bold-th">
+    <thead>
+        <tr>
+            <th><?php _e("Subject","UniTimetable"); ?></th>
+            <th><?php _e("Group","UniTimetable"); ?></th>
+            <th><?php _e("Actions","UniTimetable"); ?></th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th><?php _e("Subject","UniTimetable"); ?></th>
+            <th><?php _e("Group","UniTimetable"); ?></th>
+            <th><?php _e("Actions","UniTimetable"); ?></th>
+        </tr>
+    </tfoot>
+    <tbody>
+	<?php
         //show grey and white records in order to be more recognizable
         $bgcolor = 1;
         foreach($groups as $group){
@@ -248,11 +224,11 @@ function utt_view_groups(){
                 <td><a href='#' onclick='deleteGroup($group->groupID);' class='deleteGroup'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a>&nbsp;
                 <a href='#' onclick=\"editGroup($group->groupID,$group->periodID,$group->semester,$group->subjectID,'$group->groupName');\" class='editGroup'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
         }
-    ?>
-            </tbody>
-        </table>
-    <?php
-    die();
+	?>
+    </tbody>
+</table>
+<?php
+die();
 }
 
 //ajax response insert-update group
@@ -288,12 +264,12 @@ function utt_insert_update_group(){
         if($success == 1){
             $wpdb->query('COMMIT');
             echo 1;
-        //else rollback
+            //else rollback
         }else{
             $wpdb->query('ROLLBACK');
             echo 0;
         }
-    //it is edit
+	//it is edit
     }else{
         $safeSql = $wpdb->prepare("UPDATE $groupsTable SET periodID=%d, subjectID=%d, groupName=%s WHERE groupID=%d ",$periodID,$subjectID,$groupName,$groupID);
         $success = $wpdb->query($safeSql);

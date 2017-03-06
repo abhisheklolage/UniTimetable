@@ -137,3 +137,9 @@ table{
     width: 22px;
     height: 22px;
 }
+
+#newSemester {
+    display:none;
+    width:200px;
+    height:30px;
+}
