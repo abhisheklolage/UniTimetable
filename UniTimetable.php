@@ -26,9 +26,18 @@ function utt_activate(){
     $holidaysTable=$wpdb->prefix."utt_holidays";
     $eventsTable=$wpdb->prefix."utt_events";
     $lecturesView=$wpdb->prefix."utt_lectures_view";
+    $overlapTable=$wpdb->prefix."utt_overlap";
+    $tempTable=$wpdb->prefix."utt_temp";
     $charset_collate = $wpdb->get_charset_collate();
 
     //create utt tables
+    $sql = "CREATE TABLE IF NOT EXISTS `$tempTable` (
+            tempName varchar(20) NOT NULL COMMENT 'Subject\' s official Name',
+            PRIMARY KEY  (tempName))
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
     $sql = "CREATE TABLE IF NOT EXISTS `$periodsTable` (
             periodID int UNSIGNED NOT NULL AUTO_INCREMENT,
             year year NOT NULL COMMENT 'year - this way we can keep history',
@@ -79,6 +88,9 @@ function utt_activate(){
             teacherID smallint UNSIGNED NOT NULL AUTO_INCREMENT,
             surname varchar(35) NOT NULL COMMENT 'teacher\'s surname',
             name varchar(35) NULL COMMENT 'teacher\'s name',
+            minWorkLoad smallint UNSIGNED NOT NULL COMMENT 'minimum workload for teacher',
+            maxWorkLoad smallint UNSIGNED NOT NULL COMMENT 'maximum workload for teacher',
+            assignedWorkLoad smallint UNSIGNED NOT NULL COMMENT 'actual assigned workload for teacher',
             PRIMARY KEY  (teacherID),
             UNIQUE KEY `unique_teacher` (surname ASC, name ASC))
             ENGINE = InnoDB
@@ -149,6 +161,22 @@ function utt_activate(){
             REFERENCES `$classroomsTable` (classroomID)
             ON DELETE RESTRICT
             ON UPDATE CASCADE)
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
+    $sql="CREATE TABLE IF NOT EXISTS `$overlapTable` (
+            groupOne int UNSIGNED NOT NULL COMMENT 'group that can have a overlap',
+            groupTwo int UNSIGNED NOT NULL COMMENT 'group that can be overlapped with',
+            PRIMARY KEY (groupOne, groupTwo),
+            CONSTRAINT `fk_Groups1`
+            FOREIGN KEY (groupOne)
+            REFERENCES `$groupsTable` (groupID)
+            ON DELETE CASCADE,
+            CONSTRAINT `fk_Groups2`
+            FOREIGN KEY (groupTwo)
+            REFERENCES `$groupsTable` (groupID)
+            ON DELETE CASCADE)
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
@@ -269,6 +297,9 @@ function utt_UniTimetableMenu_create(){
     $groupsPage = add_submenu_page( __FILE__, __("Insert Group","UniTimetable"), __("Groups","UniTimetable"), 'manage_options',__FILE__.'_groups', 'utt_create_groups_page' );
     add_action('load-'.$groupsPage, 'utt_group_scripts');
 
+    $groupOverlapsPage = add_submenu_page( __FILE__, __("Insert GroupOverlaps","UniTimetable"), __("Group Overlaps","UniTimetable"), 'manage_options',__FILE__.'_groups_overlaps', 'utt_create_groups_overlaps_page' );
+    add_action('load-'.$groupOverlapsPage, 'utt_group_overlaps_scripts');
+
     $holidaysPage = add_submenu_page( __FILE__, __("Insert Holiday","UniTimetable"), __("Holidays","UniTimetable"), 'manage_options',__FILE__.'_holidays', 'utt_create_holidays_page' );
     add_action('load-'.$holidaysPage, 'utt_holiday_scripts');
 
@@ -328,6 +359,7 @@ require('periodsFunctions.php');
 require('subjectsFunctions.php');
 require('classroomsFunctions.php');
 require('groupsFunctions.php');
+require('groupOverlapsFunctions.php');
 require('holidaysFunctions.php');
 require('lecturesFunctions.php');
 require('eventsFunctions.php');

@@ -14,6 +14,7 @@ function utt_teacher_scripts(){
         'cancel' => __( 'Cancel', 'UniTimetable' ),
         'surnameVal' => __( 'Surname field is required. Please avoid using special characters.', 'UniTimetable' ),
         'nameVal' => __( 'Please avoid using special characters at Name field.', 'UniTimetable' ),
+        'minmaxWork' => __( 'Please provide valid working hours' ),
         'insertTeacher' => __( 'Insert Teacher', 'UniTimetable' ),
         'reset' => __( 'Reset', 'UniTimetable' ),
         'failAdd' => __( 'Failed to add Teacher. Check if the Teacher already exists.', 'UniTimetable' ),
@@ -36,6 +37,12 @@ function utt_create_teachers_page(){
         <br/>
         <?php _e("Name:","UniTimetable"); ?><br/>
         <input type="text" name="firstname" id="firstname" class="dirty"/>
+        <br/>
+        <?php _e("Minimum workload:","UniTimetable"); ?><br/>
+        <input type="text" name="minwork" id="minwork" class="dirty" required placeholder="<?php _e("Required","UniTimetable"); ?>"/>
+        <br/>
+        <?php _e("Maximum workload:","UniTimetable"); ?><br/>
+        <input type="text" name="maxwork" id="maxwork" class="dirty" required placeholder="<?php _e("Required","UniTimetable"); ?>"/>
         <br/>
         <div id="secondaryButtonContainer">
         <input type="submit" value="<?php _e("Submit","UniTimetable"); ?>" id="insert-updateTeacher" class="button-primary"/>
@@ -68,6 +75,9 @@ function utt_view_teachers(){
                     <th>ID</th>
                     <th><?php _e("Surname","UniTimetable"); ?></th>
                     <th><?php _e("Name","UniTimetable"); ?></th>
+                    <th><?php _e("Min workload","UniTimetable"); ?></th>
+                    <th><?php _e("Max workload","UniTimetable"); ?></th>
+                    <th><?php _e("Assigned workload","UniTimetable"); ?></th>
                     <th><?php _e("Actions","UniTimetable"); ?></th>
                 </tr>
             </thead>
@@ -76,6 +86,9 @@ function utt_view_teachers(){
                     <th>ID</th>
                     <th><?php _e("Surname","UniTimetable"); ?></th>
                     <th><?php _e("Name","UniTimetable"); ?></th>
+                    <th><?php _e("Min workload","UniTimetable"); ?></th>
+                    <th><?php _e("Max workload","UniTimetable"); ?></th>
+                    <th><?php _e("Assigned workload","UniTimetable"); ?></th>
                     <th><?php _e("Actions","UniTimetable"); ?></th>
                 </tr>
             </tfoot>
@@ -92,7 +105,7 @@ function utt_view_teachers(){
                 $bgcolor = 1;
             }
             //a record
-            echo "<tr id='$teacher->teacherID' $addClass><td>$teacher->teacherID</td><td>$teacher->surname</td><td>$teacher->name</td><td><a href='#' onclick='deleteTeacher($teacher->teacherID);' class='deleteTeacher'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a>&nbsp; <a href='#' onclick=\"editTeacher($teacher->teacherID, '$teacher->surname', '$teacher->name');\" class='editTeacher'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
+            echo "<tr id='$teacher->teacherID' $addClass><td>$teacher->teacherID</td><td>$teacher->surname</td><td>$teacher->name</td><td>$teacher->minWorkLoad</td><td>$teacher->maxWorkLoad</td><td>$teacher->assignedWorkLoad</td><td><a href='#' onclick='deleteTeacher($teacher->teacherID);' class='deleteTeacher'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a>&nbsp; <a href='#' onclick=\"editTeacher($teacher->teacherID, '$teacher->surname', '$teacher->name', $teacher->minWorkLoad, $teacher->maxWorkLoad);\" class='editTeacher'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
         }
         
         ?>
@@ -122,10 +135,12 @@ function utt_insert_update_teacher(){
     $firstname=$_GET['teacher_name'];
     $lastname=$_GET['teacher_surname'];
     $teacherid=$_GET['teacher_id'];
+    $maxhour=$_GET['teacher_max_work'];
+    $minhour=$_GET['teacher_min_work'];
     $teachersTable=$wpdb->prefix."utt_teachers";
     //insert
     if($teacherid==0){
-        $safeSql = $wpdb->prepare("INSERT INTO $teachersTable (name, surname) VALUES (%s,%s)",$firstname,$lastname);
+        $safeSql = $wpdb->prepare("INSERT INTO $teachersTable (name, surname, minWorkLoad, maxWorkLoad, assignedWorkLoad) VALUES (%s,%s,%d,%d,0)",$firstname,$lastname,$minhour,$maxhour);
         $success = $wpdb->query($safeSql);
         if($success == 1){
             //success
@@ -136,7 +151,7 @@ function utt_insert_update_teacher(){
         }
     //edit
     }else{
-        $safeSql = $wpdb->prepare("UPDATE $teachersTable SET name=%s, surname=%s WHERE teacherID=%d; ",$firstname,$lastname,$teacherid);
+        $safeSql = $wpdb->prepare("UPDATE $teachersTable SET name=%s, surname=%s, minWorkLoad=%d, maxWorkLoad=%d WHERE teacherID=%d; ",$firstname,$lastname,$minhour,$maxhour,$teacherid);
         $success = $wpdb->query($safeSql);
         if($success == 1){
             //success
