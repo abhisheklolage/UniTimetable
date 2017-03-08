@@ -26,6 +26,7 @@ function utt_activate(){
     $holidaysTable=$wpdb->prefix."utt_holidays";
     $eventsTable=$wpdb->prefix."utt_events";
     $lecturesView=$wpdb->prefix."utt_lectures_view";
+    $overlapTable=$wpdb->prefix."utt_overlap";
     $charset_collate = $wpdb->get_charset_collate();
     
     //create utt tables
@@ -156,6 +157,22 @@ function utt_activate(){
             $charset_collate;";
     dbDelta($sql);
     
+    $sql="CREATE TABLE IF NOT EXISTS `$overlapTable` (
+            groupOne int UNSIGNED NOT NULL COMMENT 'group that can have a overlap',
+            groupTwo int UNSIGNED NOT NULL COMMENT 'group that can be overlapped with',
+            PRIMARY KEY (groupOne, groupTwo),
+            CONSTRAINT `fk_Groups1`
+            FOREIGN KEY (groupOne)
+            REFERENCES `$groupsTable` (groupID)
+            ON DELETE CASCADE,
+            CONSTRAINT `fk_Groups2`
+            FOREIGN KEY (groupTwo)
+            REFERENCES `$groupsTable` (groupID)
+            ON DELETE CASCADE)
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
     //create view
     $wpdb->query("CREATE  OR REPLACE VIEW $lecturesView AS
             SELECT

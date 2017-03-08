@@ -320,6 +320,8 @@ function utt_insert_update_lecture(){
     $lecturesTable=$wpdb->prefix."utt_lectures";
     $eventsTable=$wpdb->prefix."utt_events";
     $teachersTable=$wpdb->prefix."utt_teachers";
+    $overlapTable=$wpdb->prefix."utt_overlap";
+    
     //is insert
     if($lectureID==0){
         //transaction in order to cancel inserts if something goes wrong
@@ -341,8 +343,21 @@ function utt_insert_update_lecture(){
             $busyClassroom1 = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE classroomID=%d AND %s<end AND %s>start;",$classroom,$datetime,$endDatetime));
             $busyClassroom2 = $wpdb->get_row($wpdb->prepare("SELECT * FROM $eventsTable WHERE classroomID=%d AND %s<eventEnd AND %s>eventStart;",$classroom,$datetime,$endDatetime));
             $busyGroup = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE groupID=%d AND %s<end AND %s>start;",$group,$datetime,$endDatetime));
+            //check if overlapping is possible
+            $getGroupId = $wpdb->get_results($wpdb->prepare("SELECT * FROM $lecturesTable WHERE %s<end AND %s>start;", $datetime, $endDatetime));
+
+            $notOverLappable = "no";
+            if($getGroupId != "") { //only if this is not the first lecture of the slot
+                foreach($getGroupId as $grp){
+                    $overlapper = $wpdb->get_row($wpdb->prepare("SELECT * from $overlapTable WHERE groupOne=%d AND groupTwo=%d;", $grp->groupID, $group));
+                    if($overlapper === null){
+                        $notOverLappable = "yes";
+                        break;
+                    }
+                }
+            }
             //if there is conflict, exists becomes 1
-            if($busyTeacher!="" || $busyGroup!="" || $busyClassroom1!="" || $busyClassroom2!=""){
+            if($busyTeacher!="" || $busyGroup!="" || $busyClassroom1!="" || $busyClassroom2!="" || $notOverLappable === "yes"){
                 $exists = 1;
                 break;
             }else{
