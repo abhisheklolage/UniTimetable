@@ -27,6 +27,7 @@ function utt_activate(){
     $eventsTable=$wpdb->prefix."utt_events";
     $lecturesView=$wpdb->prefix."utt_lectures_view";
     $overlapTable=$wpdb->prefix."utt_overlap";
+    $groupsTMPTable=$wpdb->prefix."utt_tmp";
     $charset_collate = $wpdb->get_charset_collate();
     
     //create utt tables
@@ -40,6 +41,13 @@ function utt_activate(){
             $charset_collate;";
     dbDelta($sql);
     
+    $sql="CREATE TABLE IF NOT EXISTS `$groupsTMPTable` (
+                groupName varchar(30) NOT NULL COMMENT 'name of the group',
+                PRIMARY KEY (groupName))
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
     $sql="CREATE TABLE IF NOT EXISTS `$subjectsTable` (
             subjectID int UNSIGNED NOT NULL AUTO_INCREMENT,
             title varchar(64) NOT NULL COMMENT 'Subject\' s official Name',
