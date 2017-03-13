@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: UniTimetable
-Plugin URI: 
+Plugin URI:
 Description: A plugin to be used by an Educational Institute, in order to store information about the timetable of a department.
 Version: 1.1
 Author: Fotis Kokkoras, Antonis Roussos
@@ -26,9 +26,18 @@ function utt_activate(){
     $holidaysTable=$wpdb->prefix."utt_holidays";
     $eventsTable=$wpdb->prefix."utt_events";
     $lecturesView=$wpdb->prefix."utt_lectures_view";
+    $overlapTable=$wpdb->prefix."utt_overlap";
+    $groupsTMPTable=$wpdb->prefix."utt_tmp";
     $charset_collate = $wpdb->get_charset_collate();
-    
+
     //create utt tables
+    $sql = "CREATE TABLE IF NOT EXISTS `$tempTable` (
+            tempName varchar(20) NOT NULL COMMENT 'Subject\' s official Name',
+            PRIMARY KEY  (tempName))
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
     $sql = "CREATE TABLE IF NOT EXISTS `$periodsTable` (
             periodID int UNSIGNED NOT NULL AUTO_INCREMENT,
             year year NOT NULL COMMENT 'year - this way we can keep history',
@@ -38,7 +47,14 @@ function utt_activate(){
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
+    $sql="CREATE TABLE IF NOT EXISTS `$groupsTMPTable` (
+                grID int UNSIGNED NOT NULL COMMENT 'name of the group',
+                PRIMARY KEY (grID))
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
     $sql="CREATE TABLE IF NOT EXISTS `$subjectsTable` (
             subjectID int UNSIGNED NOT NULL AUTO_INCREMENT,
             title varchar(64) NOT NULL COMMENT 'Subject\' s official Name',
@@ -51,7 +67,7 @@ function utt_activate(){
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
     $sql="CREATE TABLE IF NOT EXISTS `$groupsTable` (
             groupID int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'unique - for use in the Lectures table',
             periodID int UNSIGNED NOT NULL COMMENT 'FKey from Periods',
@@ -74,17 +90,20 @@ function utt_activate(){
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
     $sql="CREATE TABLE IF NOT EXISTS `$teachersTable` (
             teacherID smallint UNSIGNED NOT NULL AUTO_INCREMENT,
             surname varchar(35) NOT NULL COMMENT 'teacher\'s surname',
             name varchar(35) NULL COMMENT 'teacher\'s name',
+            minWorkLoad smallint UNSIGNED NOT NULL COMMENT 'minimum workload for teacher',
+            maxWorkLoad smallint UNSIGNED NOT NULL COMMENT 'maximum workload for teacher',
+            assignedWorkLoad smallint UNSIGNED NOT NULL COMMENT 'actual assigned workload for teacher',
             PRIMARY KEY  (teacherID),
             UNIQUE KEY `unique_teacher` (surname ASC, name ASC))
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
     $sql="CREATE TABLE IF NOT EXISTS `$classroomsTable` (
             classroomID smallint UNSIGNED NOT NULL AUTO_INCREMENT,
             name varchar(35) NOT NULL COMMENT 'name of the classroom',
@@ -95,7 +114,7 @@ function utt_activate(){
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
     $sql="CREATE TABLE IF NOT EXISTS `$lecturesTable` (
             lectureID int UNSIGNED NOT NULL AUTO_INCREMENT,
             groupID int UNSIGNED NOT NULL COMMENT 'FKey from Groups',
@@ -125,7 +144,7 @@ function utt_activate(){
             $charset_collate;";
 
     dbDelta($sql);
-    
+
     $sql="CREATE TABLE IF NOT EXISTS `$holidaysTable` (
             holidayDate date NOT NULL COMMENT 'Date of the holiday',
             holidayName varchar(45) NOT NULL COMMENT 'name of the Holiday',
@@ -133,7 +152,7 @@ function utt_activate(){
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
     $sql="CREATE TABLE IF NOT EXISTS `$eventsTable` (
             eventID int UNSIGNED NOT NULL AUTO_INCREMENT,
             eventType varchar(45) NOT NULL COMMENT 'type of the event',
@@ -152,7 +171,24 @@ function utt_activate(){
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
-    
+
+    $sql="CREATE TABLE IF NOT EXISTS `$overlapTable` (
+            overlapID int UNSIGNED NOT NULL AUTO_INCREMENT,
+            groupOne int UNSIGNED NOT NULL COMMENT 'group that can have a overlap',
+            groupTwo int UNSIGNED NOT NULL COMMENT 'group that can be overlapped with',
+            PRIMARY KEY (groupOne, groupTwo),
+            CONSTRAINT `fk_Groups1`
+            FOREIGN KEY (groupOne)
+            REFERENCES `$groupsTable` (groupID)
+            ON DELETE CASCADE,
+            CONSTRAINT `fk_Groups2`
+            FOREIGN KEY (groupTwo)
+            REFERENCES `$groupsTable` (groupID)
+            ON DELETE CASCADE)
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
     //create view
     $wpdb->query("CREATE  OR REPLACE VIEW $lecturesView AS
             SELECT
@@ -191,7 +227,7 @@ function utt_activate(){
 register_deactivation_hook( __FILE__, 'utt_deactivate' );
 //do nothing when plugin deactivates
 function utt_deactivate(){
-    
+
 }
 
 //register utt_uninstall to run when plugin is uninstalled/deleted
@@ -215,26 +251,29 @@ function utt_uninstall(){
     //drop tables
     $sql = "DROP TABLE IF EXISTS `$eventsTable` ;";
     $wpdb->query($sql);
-    
+
     $sql = "DROP TABLE IF EXISTS `$lecturesTable` ;";
     $wpdb->query($sql);
-        
+
     $sql="DROP TABLE IF EXISTS `$groupsTable` ;";
     $wpdb->query($sql);
 
     $sql="DROP TABLE IF EXISTS `$periodsTable` ;";
     $wpdb->query($sql);
-        
+
     $sql="DROP TABLE IF EXISTS `$subjectsTable` ;";
     $wpdb->query($sql);
-        
+
     $sql="DROP TABLE IF EXISTS `$classroomsTable` ;";
     $wpdb->query($sql);
 
     $sql="DROP TABLE IF EXISTS `$teachersTable` ;";
     $wpdb->query($sql);
-    
+
     $sql="DROP TABLE IF EXISTS `$holidaysTable` ;";
+    $wpdb->query($sql);
+
+    $sql="DROP TABLE IF EXISTS `$overlapTable` ;";
     $wpdb->query($sql);
 }
 
@@ -252,29 +291,35 @@ function utt_UniTimetableMenu_create(){
     wp_enqueue_style( 'utt_style',  plugins_url('css/utt_style.css', __FILE__) );
     //add main page of plugin
     add_menu_page('UniTimeTable','UniTimeTable','manage_options',__FILE__,'utt_UniTimetable_page' );
-    
+
     //add submenu pages to UniTimetable menu
     $teachersPage = add_submenu_page( __FILE__, __("Insert Teacher","UniTimetable"), __("Teachers","UniTimetable"), 'manage_options',__FILE__.'_teachers', 'utt_create_teachers_page' );
     add_action('load-'.$teachersPage, 'utt_teacher_scripts');
-    
+
     $periodsPage = add_submenu_page( __FILE__, __("Insert Period","UniTimetable"), __("Periods","UniTimetable"), 'manage_options',__FILE__.'_periods', 'utt_create_periods_page' );
     add_action('load-'.$periodsPage, 'utt_period_scripts');
-    
+
     $subjectsPage = add_submenu_page( __FILE__, __("Insert Subject","UniTimetable"), __("Subjects","UniTimetable"), 'manage_options',__FILE__.'_subjects', 'utt_create_subjects_page' );
     add_action('load-'.$subjectsPage, 'utt_subject_scripts');
-    
+
     $classroomsPage = add_submenu_page( __FILE__, __("Insert Classroom","UniTimetable"), __("Classrooms","UniTimetable"), 'manage_options',__FILE__.'_classrooms', 'utt_create_classrooms_page' );
     add_action('load-'.$classroomsPage, 'utt_classroom_scripts');
-    
+
     $groupsPage = add_submenu_page( __FILE__, __("Insert Group","UniTimetable"), __("Groups","UniTimetable"), 'manage_options',__FILE__.'_groups', 'utt_create_groups_page' );
     add_action('load-'.$groupsPage, 'utt_group_scripts');
-    
+
+    //$groupOverlapsPage = add_submenu_page( __FILE__, __("Insert GroupOverlaps","UniTimetable"), __("Group Overlaps","UniTimetable"), 'manage_options',__FILE__.'_groups_overlaps', 'utt_create_groups_overlaps_page' );
+    //add_action('load-'.$groupOverlapsPage, 'utt_group_overlaps_scripts');
+
+    $groupsOverlappingPage = add_submenu_page( __FILE__, __("Insert Group Overlapping","UniTimetable"), __("Groups overlapping","UniTimetable"), 'manage_options',__FILE__.'_groups_overlapping', 'utt_create_groups_overlaps_page' );
+    add_action('load-'.$groupsOverlappingPage, 'utt_group_overlaps_scripts');
+
     $holidaysPage = add_submenu_page( __FILE__, __("Insert Holiday","UniTimetable"), __("Holidays","UniTimetable"), 'manage_options',__FILE__.'_holidays', 'utt_create_holidays_page' );
     add_action('load-'.$holidaysPage, 'utt_holiday_scripts');
-    
+
     $eventsPage = add_submenu_page( __FILE__, __("Insert Event","UniTimetable"), __("Events","UniTimetable"), 'manage_options',__FILE__.'_events', 'utt_create_events_page' );
     add_action('load-'.$eventsPage, 'utt_event_scripts');
-    
+
     $lecturesPage = add_submenu_page( __FILE__, __("Insert Lecture","UniTimetable"), __("Lectures","UniTimetable"), 'manage_options',__FILE__.'_lectures', 'utt_create_lectures_page' );
     add_action('load-'.$lecturesPage, 'utt_lecture_scripts');
 }
@@ -328,6 +373,7 @@ require('periodsFunctions.php');
 require('subjectsFunctions.php');
 require('classroomsFunctions.php');
 require('groupsFunctions.php');
+require('groupsoverlappingFunctions.php');
 require('holidaysFunctions.php');
 require('lecturesFunctions.php');
 require('eventsFunctions.php');

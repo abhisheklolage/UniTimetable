@@ -13,7 +13,7 @@ function isDate(date){
    var d = date[0];
    var m = date[1];
    var y = date[2];
-   
+
    if (m<1 || m>12) {
       return false;
    }
@@ -130,8 +130,8 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    endTime = endTime.split(":");
    endTime = endTime[0]+":"+endTime[1];
    jQuery('#endTime').val(endTime);
-   jQuery('.weekDiv').hide();
    jQuery('#clearLectureForm').html(lectureStrings.cancel);
+   loadWorkHours();
 }
 //load groups combo-box depending on period and subject. Selected parameter is used for autofill on edit
 function loadGroups(selected, period, subject) {
@@ -151,7 +151,7 @@ function loadGroups(selected, period, subject) {
    //ajax call
    jQuery.get('admin-ajax.php' , data, function(data){
       //load groups combo-box
-      jQuery('#groups').html(data);                                                
+      jQuery('#groups').html(data);
    });
 }
 //load subjects when semester selected
@@ -168,6 +168,20 @@ function loadSubjects(selected){
       //load combo-box
       jQuery('#subjects').html(data);
    });
+}
+//load work hours when teacher is selected
+function loadWorkHours(){
+   teacherName = jQuery('#teacher').val();
+   //ajax data
+   var data = {
+      action: 'utt_load_work_hour',
+      teacherName: teacherName
+   };
+   //ajax call
+   jQuery.get('admin-ajax.php', data, function(data){
+      jQuery('#workloaddiv').html(data);
+   });
+   jQuery('#messages').html("");
 }
 //runs when filterSelect2 is changed
 function filterFunction() {
@@ -215,21 +229,21 @@ jQuery(function ($) {
                    alert('there was an error while fetching events!');
                }
             },
-   
+
             // any other sources...
 
          ],
-         loading: function (bool) { 
+         loading: function (bool) {
             if (bool)
                //show spinner when loading
-               $('#loadingImg').show(); 
-             else 
-               $('#loadingImg').hide(); 
+               $('#loadingImg').show();
+             else
+               $('#loadingImg').hide();
          },
          timeFormat: 'H:mm' ,
          eventRender: function(event, element) {
             if (event.buttons == false) {
-               
+
             }else{
                element.find('.fc-time').before($("<a href='javascript:;' onclick='deleteLecture("+event.lectureID+");' class='deleteLecture' title='Διαγραφή Διδασκαλίας'><div class='deleteLectureDiv'></div></a><a href='#' onclick='editLecture("+event.lectureID+","+event.periodID+","+event.semester+","+event.subjectID+","+event.groupID+","+event.teacherID+","+event.classroomID+",\""+event.start2+"\",\""+event.end2+"\");' class='editLecture' title='Επεξεργασία Διδασκαλίας'><div class='editLectureDiv'></div></a><br/>"));
             }
@@ -254,7 +268,7 @@ jQuery(function ($) {
       //ajax call
       $.get('admin-ajax.php' , data, function(data){
          //groups combo-box reload
-         $('#groups').html(data);                                                
+         $('#groups').html(data);
       });
    })
    //load datepicker to date element
@@ -267,7 +281,7 @@ jQuery(function ($) {
          // hours
          page: 60
       },
- 
+
       _parse: function( value ) {
          if ( typeof value === "string" ) {
             // already a timestamp
@@ -278,7 +292,7 @@ jQuery(function ($) {
          }
          return value;
       },
- 
+
       _format: function( value ) {
          return Globalize.format( new Date(value), "t" );
       }
@@ -300,6 +314,9 @@ jQuery(function ($) {
       var time = $('#time').val();
       var endTime = $('#endTime').val();
       var weeks = $('#weeks').val();
+      var maxwork = $('#maxwork').val();
+      var minwork = $('#minwork').val();
+      var assignedwork = $('#assignedwork').val();
       var success = 0;
       //validation
       if (period == 0) {
@@ -351,11 +368,15 @@ jQuery(function ($) {
          date: date,
          time: time,
          endTime: endTime,
-         weeks: weeks
+         weeks: weeks,
+         minwork: minwork,
+         maxwork: maxwork,
+         assignedwork: assignedwork
       };
       //ajax call
       $.get('admin-ajax.php' , data, function(data){
          success = data;
+         alert(data);
          //success
          if (success == 1) {
                //insert
@@ -363,7 +384,7 @@ jQuery(function ($) {
                   $('#messages').html("<div id='message' class='updated'>"+lectureStrings.successAdd+"</div>");
                //edit
                }else{
-                  $('#messages').html("<div id='message' class='updated'>"+lectureStrings.successEdit+"</div>"); 
+                  $('#messages').html("<div id='message' class='updated'>"+lectureStrings.successEdit+"</div>");
                }
                //clear form
                $('#lectureTitle').html(lectureStrings.insertLecture);
@@ -373,6 +394,7 @@ jQuery(function ($) {
                jQuery('.weekDiv').show();
                $('#clearLectureForm').html(lectureStrings.reset);
                setTimeout(loadCalendar, 500);
+               loadWorkHours();
                isDirty = 0;
             //fail
             }else{
@@ -380,6 +402,7 @@ jQuery(function ($) {
                if (lectureID == 0) {
                   $('#messages').html("<div id='message' class='error'>"+lectureStrings.failAdd+"</div>");
                //edit
+                  alert("abhishek");
                }else{
                   $('#messages').html("<div id='message' class='error'>"+lectureStrings.failEdit+"</div>");
                }
@@ -403,6 +426,9 @@ jQuery(function ($) {
       $('#weeks').val(1);
       $('#clearLectureForm').html(lectureStrings.reset);
       $('#message').remove();
+      $('#minwork').val("");
+      $('#maxwork').val("");
+      $('#assignedwork').val("");
       isDirty = 0;
       return false;
    })
@@ -423,5 +449,5 @@ jQuery(function ($) {
    $('.dirty').change(function(){
       isDirty = 1;
    })
-    
+
 });
