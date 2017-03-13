@@ -143,21 +143,6 @@ function utt_create_lectures_page(){
                 ?>
             </select>
         </div>
-        <div class="element">
-            <?php _e("Select Groups for Overlap","UniTimetable"); ?><br/>
-            <select multiple name="ogroup[]" id="ogroup" class="dirty">
-                <?php
-                //fill select with groups
-                $groupsTable=$wpdb->prefix."utt_groups";
-                $groups = $wpdb->get_results( "SELECT * FROM $groupsTable ORDER BY groupName");
-                echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-                //translate classroom type
-                foreach($groups as $group){
-                    echo "<option value='$group->groupsID'>$group->groupName</option>";
-                }
-                ?>
-            </select>
-        </div>
         <div id = "workloaddiv">
         <div class="element firstInRow datetimeElements">
             Min Workload:<br/>
@@ -321,6 +306,7 @@ add_action('wp_ajax_utt_insert_update_lecture','utt_insert_update_lecture');
 function utt_insert_update_lecture(){
     global $wpdb;
     //data to be inserted/updated
+    $period=$_GET['period'];
     $lectureID=$_GET['lectureID'];
     $group=$_GET['group'];
     $teacher=$_GET['teacher'];
@@ -329,6 +315,7 @@ function utt_insert_update_lecture(){
     $time=$_GET['time'];
     $endTime=$_GET['endTime'];
     $weeks=$_GET['weeks'];
+    $val=$_GET['ogroup'];
     $maxwork=$_GET['maxwork'];
     $minwork=$_GET['minWork'];
     $assignedwork=$_GET['assignedwork'];
@@ -337,15 +324,15 @@ function utt_insert_update_lecture(){
     $teachersTable=$wpdb->prefix."utt_teachers";
     $overlapTable=$wpdb->prefix."utt_overlap";
     $tempTable=$wpdb->prefix."utt_temp";
-    //$overlapping_groups=$_GET['ogroup'];
-    //print_r ($overlapping_groups);
-    //$temp_entry="entry";
-    foreach ($_GET['ogroup'] as $selectedGroup){
-        echo "$selectedGroup";
-        //$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s)", $temp_entry);
-        $safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s);", $selectedGroup);
-        $wpdb->query($safeSql);
-    }
+
+    //$fids = implode(",",$_POST['ogroup']);
+    //echo "$fids";
+    //foreach ($_GET['ogroup'] as $selectedGroup){
+        //echo "$selectedGroup";
+        ////$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s)", $temp_entry);
+        //$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s);", $selectedGroup);
+        //$wpdb->query($safeSql);
+    //}
 
     //is insert
     if($lectureID==0){

@@ -27,7 +27,7 @@ function utt_activate(){
     $eventsTable=$wpdb->prefix."utt_events";
     $lecturesView=$wpdb->prefix."utt_lectures_view";
     $overlapTable=$wpdb->prefix."utt_overlap";
-    $tempTable=$wpdb->prefix."utt_temp";
+    $groupsTMPTable=$wpdb->prefix."utt_tmp";
     $charset_collate = $wpdb->get_charset_collate();
 
     //create utt tables
@@ -44,6 +44,13 @@ function utt_activate(){
             semester varchar(45) NOT NULL COMMENT 'Summer, Winter',
             PRIMARY  KEY (periodID),
             UNIQUE KEY `unique_period` (year ASC, semester ASC))
+            ENGINE = InnoDB
+            $charset_collate;";
+    dbDelta($sql);
+
+    $sql="CREATE TABLE IF NOT EXISTS `$groupsTMPTable` (
+                grID int UNSIGNED NOT NULL COMMENT 'name of the group',
+                PRIMARY KEY (grID))
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);
@@ -166,6 +173,7 @@ function utt_activate(){
     dbDelta($sql);
 
     $sql="CREATE TABLE IF NOT EXISTS `$overlapTable` (
+            overlapID int UNSIGNED NOT NULL AUTO_INCREMENT,
             groupOne int UNSIGNED NOT NULL COMMENT 'group that can have a overlap',
             groupTwo int UNSIGNED NOT NULL COMMENT 'group that can be overlapped with',
             PRIMARY KEY (groupOne, groupTwo),
@@ -264,6 +272,9 @@ function utt_uninstall(){
 
     $sql="DROP TABLE IF EXISTS `$holidaysTable` ;";
     $wpdb->query($sql);
+
+    $sql="DROP TABLE IF EXISTS `$overlapTable` ;";
+    $wpdb->query($sql);
 }
 
 //register utt_load languages on init hook
@@ -297,8 +308,11 @@ function utt_UniTimetableMenu_create(){
     $groupsPage = add_submenu_page( __FILE__, __("Insert Group","UniTimetable"), __("Groups","UniTimetable"), 'manage_options',__FILE__.'_groups', 'utt_create_groups_page' );
     add_action('load-'.$groupsPage, 'utt_group_scripts');
 
-    $groupOverlapsPage = add_submenu_page( __FILE__, __("Insert GroupOverlaps","UniTimetable"), __("Group Overlaps","UniTimetable"), 'manage_options',__FILE__.'_groups_overlaps', 'utt_create_groups_overlaps_page' );
-    add_action('load-'.$groupOverlapsPage, 'utt_group_overlaps_scripts');
+    //$groupOverlapsPage = add_submenu_page( __FILE__, __("Insert GroupOverlaps","UniTimetable"), __("Group Overlaps","UniTimetable"), 'manage_options',__FILE__.'_groups_overlaps', 'utt_create_groups_overlaps_page' );
+    //add_action('load-'.$groupOverlapsPage, 'utt_group_overlaps_scripts');
+
+    $groupsOverlappingPage = add_submenu_page( __FILE__, __("Insert Group Overlapping","UniTimetable"), __("Groups overlapping","UniTimetable"), 'manage_options',__FILE__.'_groups_overlapping', 'utt_create_groups_overlaps_page' );
+    add_action('load-'.$groupsOverlappingPage, 'utt_group_overlaps_scripts');
 
     $holidaysPage = add_submenu_page( __FILE__, __("Insert Holiday","UniTimetable"), __("Holidays","UniTimetable"), 'manage_options',__FILE__.'_holidays', 'utt_create_holidays_page' );
     add_action('load-'.$holidaysPage, 'utt_holiday_scripts');
@@ -359,7 +373,7 @@ require('periodsFunctions.php');
 require('subjectsFunctions.php');
 require('classroomsFunctions.php');
 require('groupsFunctions.php');
-require('groupOverlapsFunctions.php');
+require('groupsoverlappingFunctions.php');
 require('holidaysFunctions.php');
 require('lecturesFunctions.php');
 require('eventsFunctions.php');
