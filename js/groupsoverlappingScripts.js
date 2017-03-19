@@ -23,7 +23,14 @@ function deleteOverlap(g1ID, g2ID) {
          }else{
             jQuery('#messages').html("<div id='message' class='error'>"+groupOverlapStrings.overlapNotDeleted+"</div>");
          }
-
+         //ajax data
+        data = {
+          action: 'utt_view_groups_overlaps',
+        };
+        //ajax call, reload table with data from database
+        jQuery.get('admin-ajax.php' , data, function(data){
+          jQuery('#groupsOverlapResults').html(data);
+        });
       });
    }
    return false;

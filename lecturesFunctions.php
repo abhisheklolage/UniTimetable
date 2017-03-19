@@ -325,15 +325,6 @@ function utt_insert_update_lecture(){
     $overlapTable=$wpdb->prefix."utt_overlap";
     $tempTable=$wpdb->prefix."utt_temp";
 
-    //$fids = implode(",",$_POST['ogroup']);
-    //echo "$fids";
-    //foreach ($_GET['ogroup'] as $selectedGroup){
-        //echo "$selectedGroup";
-        ////$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s)", $temp_entry);
-        //$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s);", $selectedGroup);
-        //$wpdb->query($safeSql);
-    //}
-
     //is insert
     if($lectureID==0){
         //transaction in order to cancel inserts if something goes wrong
@@ -382,11 +373,11 @@ function utt_insert_update_lecture(){
         //if exists is 0 then commit transaction
         if($exists==0){
             $wpdb->query('COMMIT');
-            //echo 1;
+            echo 1;
         //if exists is 1 rollback
         }else{
             $wpdb->query('ROLLBACK');
-            //echo 0;
+            echo 0;
         }
     //update
     }else{
