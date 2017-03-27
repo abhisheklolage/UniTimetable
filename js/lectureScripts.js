@@ -130,7 +130,6 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    endTime = endTime.split(":");
    endTime = endTime[0]+":"+endTime[1];
    jQuery('#endTime').val(endTime);
-   jQuery('.weekDiv').hide();
    jQuery('#clearLectureForm').html(lectureStrings.cancel);
 }
 //load groups combo-box depending on period and subject. Selected parameter is used for autofill on edit
