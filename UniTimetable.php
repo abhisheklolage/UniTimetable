@@ -71,20 +71,13 @@ function utt_activate(){
     $sql="CREATE TABLE IF NOT EXISTS `$groupsTable` (
             groupID int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'unique - for use in the Lectures table',
             periodID int UNSIGNED NOT NULL COMMENT 'FKey from Periods',
-            subjectID int UNSIGNED NOT NULL COMMENT 'FKey from Subjects',
             groupName varchar(30) NOT NULL COMMENT 'name of the group',
             PRIMARY KEY  (periodID, subjectID, groupName),
             KEY `fk_Groups_Periods_idx` (periodID ASC),
-            KEY `fk_Groups_Subject1_idx` (subjectID ASC),
             UNIQUE KEY `groupID_UNIQUE` (groupID ASC),
             CONSTRAINT `fk_Groups_Periods`
             FOREIGN KEY (periodID)
             REFERENCES `$periodsTable` (periodID)
-            ON DELETE RESTRICT
-            ON UPDATE CASCADE,
-            CONSTRAINT `fk_Groups_Subjects`
-            FOREIGN KEY (subjectID)
-            REFERENCES `$subjectsTable` (subjectID)
             ON DELETE RESTRICT
             ON UPDATE CASCADE)
             ENGINE = InnoDB
@@ -217,7 +210,6 @@ function utt_activate(){
                 $teachersTable
             WHERE
                 $lecturesTable.groupID = $groupsTable.groupID
-                    AND $groupsTable.subjectID = $subjectsTable.subjectID
                     AND $lecturesTable.classroomID = $classroomsTable.classroomID
                     AND $lecturesTable.teacherID = $teachersTable.teacherID;");
 
