@@ -72,7 +72,7 @@ function utt_activate(){
             groupID int UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'unique - for use in the Lectures table',
             periodID int UNSIGNED NOT NULL COMMENT 'FKey from Periods',
             groupName varchar(30) NOT NULL COMMENT 'name of the group',
-            PRIMARY KEY  (periodID, subjectID, groupName),
+            PRIMARY KEY  (periodID, groupName),
             KEY `fk_Groups_Periods_idx` (periodID ASC),
             UNIQUE KEY `groupID_UNIQUE` (groupID ASC),
             CONSTRAINT `fk_Groups_Periods`
