@@ -325,15 +325,6 @@ function utt_insert_update_lecture(){
     $overlapTable=$wpdb->prefix."utt_overlap";
     $tempTable=$wpdb->prefix."utt_temp";
 
-    //$fids = implode(",",$_POST['ogroup']);
-    //echo "$fids";
-    //foreach ($_GET['ogroup'] as $selectedGroup){
-        //echo "$selectedGroup";
-        ////$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s)", $temp_entry);
-        //$safeSql = $wpdb->prepare("INSERT INTO $tempTable (tempName) VALUES(%s);", $selectedGroup);
-        //$wpdb->query($safeSql);
-    //}
-
     //is insert
     if($lectureID==0){
         //transaction in order to cancel inserts if something goes wrong
@@ -341,7 +332,7 @@ function utt_insert_update_lecture(){
         //if conflict with a teacher, classroom or group, exists becomes 1
         $exists = 0;
         //insert records depending on weeks number
-        for ($j=0;$j<=$weeks-1;$j++){
+        for ($j=0;$j<=15;$j++){
             $d = new DateTime($date);
             //adds record to selected week, next loop adds to next week etc...
             $d->modify('+'.$j.' weeks');
@@ -375,18 +366,20 @@ function utt_insert_update_lecture(){
             }else{
                 $safeSql = $wpdb->prepare("INSERT INTO $lecturesTable (groupID, classroomID, teacherID, start, end) VALUES( %d, %d, %d, %s, %s)",$group,$classroom,$teacher,$datetime,$endDatetime);
                 $wpdb->query($safeSql);
-                $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $teacher);
-                $wpdb->query($safeSql);
+                if($j == 0){
+                    $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $teacher);
+                    $wpdb->query($safeSql);
+                }
             }
         }
         //if exists is 0 then commit transaction
         if($exists==0){
             $wpdb->query('COMMIT');
-            //echo 1;
+            echo 1;
         //if exists is 1 rollback
         }else{
             $wpdb->query('ROLLBACK');
-            //echo 0;
+            echo 0;
         }
     //update
     }else{
@@ -558,17 +551,19 @@ function utt_delete_lecture(){
     if($deleteAll==1){
         $safeSql = $wpdb->prepare("DELETE FROM $lecturesTable WHERE groupID=%d ;",$lecture->groupID);
         $wpdb->query($safeSql);
-    //else delete only this lecture
-    }else{
-        $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
-        $wpdb->query($safeSql);
-
+    
         $enddate = explode(" ", $lecture->end);
         $startdate = explode(" ", $lecture->start);
         $diff = $enddate[1] - $startdate[1];
         $assignedwork = $lecture->assignedWorkLoad - $diff;
-
+        //do only if the lecture if completely being removed from all 16 slots
         $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $lecture->teacherID);
+        $wpdb->query($safeSql);
+        //else delete only this lecture
+    
+    }
+    else{
+        $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
         $wpdb->query($safeSql);
     }
     die();

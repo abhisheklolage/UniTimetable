@@ -31,13 +31,6 @@ function utt_activate(){
     $charset_collate = $wpdb->get_charset_collate();
 
     //create utt tables
-    $sql = "CREATE TABLE IF NOT EXISTS `$tempTable` (
-            tempName varchar(20) NOT NULL COMMENT 'Subject\' s official Name',
-            PRIMARY KEY  (tempName))
-            ENGINE = InnoDB
-            $charset_collate;";
-    dbDelta($sql);
-
     $sql = "CREATE TABLE IF NOT EXISTS `$periodsTable` (
             periodID int UNSIGNED NOT NULL AUTO_INCREMENT,
             year year NOT NULL COMMENT 'year - this way we can keep history',

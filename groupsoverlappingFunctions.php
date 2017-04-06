@@ -56,7 +56,7 @@ add_action('wp_ajax_utt_delete_overlap', 'utt_delete_overlap');
 function utt_delete_overlap(){
     global $wpdb;
     $overlapTable=$wpdb->prefix."utt_overlap";
-    $safeSql = $wpdb->prepare("DELETE FROM $overlapTable WHERE groupOne = %d AND groupTwo = %d", $_GET['g1_ID'], $_GET['g2_ID']);
+    $safeSql = $wpdb->prepare("DELETE FROM $overlapTable WHERE groupOne = %d AND groupTwo = %d;", $_GET['g1_ID'], $_GET['g2_ID']);
     $success = $wpdb->query($safeSql);
     //if success is 1, delete succeeded
     echo $success;
@@ -76,12 +76,13 @@ function utt_insert_update_groups_overlaps(){
         $success = $wpdb->query($safeSql);
     }
     // inserting overlaps for current selection only
-    $safeSql = $wpdb->prepare("INSERT INTO wp_utt_overlap (groupOne, groupTwo) SELECT A.grID, B.grID
-                                FROM wp_utt_tmp AS A, wp_utt_tmp AS B WHERE A.grID != B.grID");
-    $success = $wpdb->query($safeSql);
-
+    $allPairs = $wpdb->get_results("SELECT A.grID as valOne, B.grID as valTwo FROM $groupsTMPTable AS A, $groupsTMPTable AS B WHERE A.grID != B.grID");
+    foreach($allPairs as $pair){
+        $safeSql = $wpdb->prepare("INSERT INTO $groupOverlapTable (groupOne, groupTwo) VALUES ($pair->valOne, $pair->valTwo);");
+        $success = $wpdb->query($safeSql);
+    }
     // truncate the GroupTMPTable
-    $safeSql = $wpdb->prepare("TRUNCATE TABLE wp_utt_tmp");
+    $safeSql = $wpdb->prepare("TRUNCATE TABLE $groupsTMPTable;");
     $success = $wpdb->query($safeSql);
     echo $success;
     die();

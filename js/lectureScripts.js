@@ -376,7 +376,6 @@ jQuery(function ($) {
       //ajax call
       $.get('admin-ajax.php' , data, function(data){
          success = data;
-         alert(data);
          //success
          if (success == 1) {
                //insert
@@ -402,7 +401,6 @@ jQuery(function ($) {
                if (lectureID == 0) {
                   $('#messages').html("<div id='message' class='error'>"+lectureStrings.failAdd+"</div>");
                //edit
-                  alert("abhishek");
                }else{
                   $('#messages').html("<div id='message' class='error'>"+lectureStrings.failEdit+"</div>");
                }
