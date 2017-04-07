@@ -161,40 +161,10 @@ function utt_create_groups_page(){
 add_action('wp_ajax_utt_view_groups','utt_view_groups');
 function utt_view_groups(){
     global $wpdb;
-    //get filter values
-    if(isset($_GET['period_id'])){
-        $periodID = $_GET['period_id'];
-        $semester = $_GET['semester'];
-    //if first time loaded, show results for current period and 1st semester
-    }else{
-        $periodsTable=$wpdb->prefix."utt_periods";
-        $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
-        $date = date("Y-m-d");
-        foreach($periods as $period){
-            $startWinter = $period->year."-09-01";
-            $nextYear = $period->year +1;
-            $endWinter = $nextYear . "-03-01";
-            $startSpring = $period->year . "-03-01";
-            if($date >= $startWinter && $date < $endWinter && $period->semester == "W"){
-                $periodID = $period->periodID;
-            }else if($date >= $startSpring && $date<$startWinter && $period->semester == "S"){
-                $periodID = $period->periodID;
-            }
-        }
-        $semester = 1;
-    }
-    //show registered groups
     $groupsTable = $wpdb->prefix."utt_groups";
+    //show registered groups
     //if not selected period, show nothing
-    if($periodID == ""){
-        $periodID=0;
-    }
-    //if not selected semester, show for all semesters
-    if($semester==0){
-        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d ORDER BY title, type, groupName",$periodID);
-    }else{
-        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d AND semester=%d ORDER BY title, type, groupName",$periodID,$semester);
-    }
+    $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable",$periodID);
     $groups = $wpdb->get_results($safeSql);
     ?>
         <!-- show table of groups -->
@@ -223,17 +193,10 @@ function utt_view_groups(){
                 $addClass = "class='white'";
                 $bgcolor = 1;
             }
-            if($group->type == "T"){
-                $type = __("T","UniTimetable");
-            }else if($group->type == "L"){
-                $type = __("L","UniTimetable");
-            }else{
-                $type = __("PE","UniTimetable");
-            }
             //a record
-            echo "<tr id='$group->groupID' $addClass><td>$group->title $type</td><td>$group->groupName</td>
+            echo "<tr id='$group->groupID' $addClass><td>$group->groupName</td>
                 <td><a href='#' onclick='deleteGroup($group->groupID);' class='deleteGroup'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a>&nbsp;
-                <a href='#' onclick=\"editGroup($group->groupID,$group->periodID,$group->semester,'$group->groupName');\" class='editGroup'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
+                <a href='#' onclick=\"editGroup($group->groupID,$group->periodID,'$group->groupName');\" class='editGroup'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
         }
     ?>
             </tbody>

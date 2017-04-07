@@ -162,7 +162,7 @@ function utt_activate(){
             overlapID int UNSIGNED NOT NULL AUTO_INCREMENT,
             groupOne int UNSIGNED NOT NULL COMMENT 'group that can have a overlap',
             groupTwo int UNSIGNED NOT NULL COMMENT 'group that can be overlapped with',
-            PRIMARY KEY (groupOne, groupTwo),
+            PRIMARY KEY (overlapID, groupOne, groupTwo),
             CONSTRAINT `fk_Groups1`
             FOREIGN KEY (groupOne)
             REFERENCES `$groupsTable` (groupID)
