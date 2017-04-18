@@ -326,6 +326,14 @@ function utt_insert_update_lecture(){
         $wpdb->query('START TRANSACTION');
         //if conflict with a teacher, classroom or group, exists becomes 1
         $exists = 0;
+        $d = new DateTime($date);
+        //adds record to selected week, next loop adds to next week etc...
+        $d->modify('+'.$j.' weeks');
+        $usedDate = $d->format('y-m-d');
+        $datetime = $usedDate." ".$time;
+        $endDatetime = $usedDate." ".$endTime;
+        $assignedwork = $assignedwork + ($endTime - $time);
+           
         //insert records depending on weeks number
         for ($j=0;$j<=$weeks-1;$j++){
             $d = new DateTime($date);
@@ -335,7 +343,6 @@ function utt_insert_update_lecture(){
                
             $datetime = $usedDate." ".$time;
             $endDatetime = $usedDate." ".$endTime;
-            $assignedwork = $assignedwork + ($endTime - $time);
             //check if there is conflict
             $busyTeacher = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE teacherID=%d AND %s<end AND %s>start;",$teacher,$datetime,$endDatetime));
             $busyClassroom1 = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE classroomID=%d AND %s<end AND %s>start;",$classroom,$datetime,$endDatetime));
@@ -348,12 +355,13 @@ function utt_insert_update_lecture(){
             }else{
                 $safeSql = $wpdb->prepare("INSERT INTO $lecturesTable (groupID, classroomID, teacherID, start, end) VALUES( %d, %d, %d, %s, %s)",$group,$classroom,$teacher,$datetime,$endDatetime);
                 $wpdb->query($safeSql);
-                $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $teacher);
-                $wpdb->query($safeSql);
             }
         }
         //if exists is 0 then commit transaction
         if($exists==0){
+            //update only once
+            $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $teacher);
+                $wpdb->query($safeSql);
             $wpdb->query('COMMIT');
             echo 1;
         //if exists is 1 rollback
@@ -531,17 +539,16 @@ function utt_delete_lecture(){
     if($deleteAll==1){
         $safeSql = $wpdb->prepare("DELETE FROM $lecturesTable WHERE groupID=%d ;",$lecture->groupID);
         $wpdb->query($safeSql);
-    //else delete only this lecture
-    }else{
-        $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
-        $wpdb->query($safeSql);
-
         $enddate = explode(" ", $lecture->end);
         $startdate = explode(" ", $lecture->start);
         $diff = $enddate[1] - $startdate[1];
         $assignedwork = $lecture->assignedWorkLoad - $diff;
     
         $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $lecture->teacherID);
+        $wpdb->query($safeSql);
+    //else delete only this lecture
+    }else{
+        $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
         $wpdb->query($safeSql);
     }
     die();
