@@ -111,19 +111,7 @@ function utt_create_lectures_page(){
                     </select>
 		</div>
             </div>
-            <div class="element firstInRow">
-		<?php _e("Teacher:","UniTimetable"); ?><br/>
-		<select name="teacher" id="teacher" class="dirty">
-                    <?php
-                    $teachersTable=$wpdb->prefix."utt_teachers";
-                    $teachers = $wpdb->get_results( "SELECT * FROM $teachersTable ORDER BY surname, name");
-                    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-                    foreach($teachers as $teacher){
-			echo "<option value='$teacher->teacherID'>$teacher->surname $teacher->name</option>";
-                    }
-                    ?>
-		</select>
-        </div>
+            
         <div class="element firstInRow">
             <?php _e("Teacher:","UniTimetable"); ?><br/>
             <select name="teacher" id="teacher" class="dirty" onchange="loadWorkHours();">
@@ -194,49 +182,8 @@ function utt_create_lectures_page(){
                 ?>
             </select>
         </div>
-            <div class="element">
-		<?php _e("Classroom:","UniTimetable"); ?><br/>
-		<select name="classroom" id="classroom" class="dirty">
-                    <?php
-                    //fill select with classrooms
-                    $classroomsTable=$wpdb->prefix."utt_classrooms";
-                    $classrooms = $wpdb->get_results( "SELECT * FROM $classroomsTable ORDER BY name");
-                    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-                    //translate classroom type
-                    foreach($classrooms as $classroom){
-			if($classroom->type == "Lecture"){
-                            $classroomType = __("Lecture","UniTimetable");
-			}else{
-                            $classroomType = __("Laboratory","UniTimetable");
-			}
-			echo "<option value='$classroom->classroomID'>$classroom->name $classroomType</option>";
-                    }
-                    ?>
-		</select>
-            </div>
-            <div class="element firstInRow datetimeElements">
-		<?php _e("Date:","UniTimetable"); ?>
-		<br/>
-		<input type="text" name="date" id="date" class="dirty" size="14"/>
-            </div>
-            <div class="element datetimeElements">
-		<?php _e("Start time:","UniTimetable"); ?><br/>
-		<input name="time" id="time" class="dirty" value="8:00" size="10"/>
-            </div>
-            <div class="element datetimeElements">
-		<?php _e("End time:","UniTimetable"); ?><br/>
-		<input name="endTime" id="endTime" class="dirty" value="10:00" size="10"/>
-            </div>
-            <div class="element weekDiv">
-		<?php _e("Number of weeks:","UniTimetable"); ?><br/>
-		<select name="weeks" id="weeks" class="dirty">
-                    <?php
-                    for( $i=1 ; $i<26 ; $i++ ){
-			echo "<option value='$i'>$i</option>";
-                    }
-                    ?>
-		</select>
-            </div>
+            
+            
             <div id="secondaryButtonContainer">
                 <input type="submit" value="<?php _e("Submit","UniTimetable"); ?>" id="insert-updateLecture" class="button-primary"/>
                 <a href='#' class='button-secondary' id="clearLectureForm"><?php _e("Reset","UniTimetable"); ?></a>
