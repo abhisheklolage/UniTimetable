@@ -111,7 +111,7 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    jQuery('#period').val(periodID);
    jQuery('#semester').val(semester);
    loadSubjects(subjectID);
-   loadGroups(groupID,periodID,subjectID);
+   loadGroups(groupID,periodID);
    jQuery('#teacher').val(teacherID);
    jQuery('#classroom').val(classroomID);
    start = start.split(" ");
@@ -134,18 +134,14 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    loadWorkHours();
 }
 //load groups combo-box depending on period and subject. Selected parameter is used for autofill on edit
-function loadGroups(selected, period, subject) {
+function loadGroups(selected, period,) {
    if (period == 0) {
       period = jQuery('#period').val();
-   }
-   if (subject == 0) {
-      subject = jQuery('#subject').val();
    }
    //ajax data
    var data = {
       action: 'utt_load_groups',
       period: period,
-      subject: subject,
       selected: selected
    };
    //ajax call
@@ -258,12 +254,10 @@ jQuery(function ($) {
    //when period is changed load groups (if semester and subject are selected)
    $('#period').change(function(){
       period = $('#period').val();
-      subject = $('#subject').val();
       //ajax data
       var data = {
          action: 'utt_load_groups',
          period: period,
-         subject: subject
       };
       //ajax call
       $.get('admin-ajax.php' , data, function(data){

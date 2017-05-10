@@ -218,13 +218,13 @@ function utt_create_lectures_page(){
 add_action('wp_ajax_utt_load_groups','utt_load_groups');
 function utt_load_groups(){
         $period = $_GET['period'];
-        $subject = $_GET['subject'];
+        //$subject = $_GET['subject'];
         if(isset($_GET['selected'])){
             $selected = $_GET['selected'];
         }
         global $wpdb;
         $groupsTable = $wpdb->prefix."utt_groups";
-        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d AND subjectID=%d ORDER BY groupName;",$period,$subject);
+        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d ORDER BY groupName;",$period);
         $groups = $wpdb->get_results($safeSql);
         echo "<select name='group' id='group' class='dirty'>";
         echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
@@ -551,7 +551,7 @@ function utt_delete_lecture(){
     if($deleteAll==1){
         $safeSql = $wpdb->prepare("DELETE FROM $lecturesTable WHERE groupID=%d ;",$lecture->groupID);
         $wpdb->query($safeSql);
-    
+
         $enddate = explode(" ", $lecture->end);
         $startdate = explode(" ", $lecture->start);
         $diff = $enddate[1] - $startdate[1];
@@ -560,7 +560,7 @@ function utt_delete_lecture(){
         $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $lecture->teacherID);
         $wpdb->query($safeSql);
         //else delete only this lecture
-    
+
     }
     else{
         $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
