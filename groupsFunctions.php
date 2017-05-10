@@ -54,18 +54,6 @@ function utt_create_groups_page(){
             </select>
             </div>
             <div class="element">
-            <?php _e("Semester:","UniTimetable"); ?><br/>
-            <select name="semester" id="semester" class="dirty">
-                <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                <?php
-                //show semester numbers
-                for( $i=1 ; $i<11 ; $i++ ){
-                    echo "<option value='$i'>$i</option>";
-                }
-                ?>
-            </select>
-            </div>
-            <div class="element">
             <!-- select number of groups to be created -->
             <?php _e("Number of Groups:","UniTimetable"); ?><br/>
             <select name="groupsNumber" id="groupsNumber" class="dirty">
