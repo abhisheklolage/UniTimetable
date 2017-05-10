@@ -27,7 +27,6 @@ function utt_activate(){
     $eventsTable=$wpdb->prefix."utt_events";
     $lecturesView=$wpdb->prefix."utt_lectures_view";
     $overlapTable=$wpdb->prefix."utt_overlap";
-    $groupsTMPTable=$wpdb->prefix."utt_tmp";
     $subjectsGroupsMapTable=$wpdb->prefix."utt_subjects_groups";
     $charset_collate = $wpdb->get_charset_collate();
 
@@ -38,13 +37,6 @@ function utt_activate(){
             semester varchar(45) NOT NULL COMMENT 'Summer, Winter',
             PRIMARY  KEY (periodID),
             UNIQUE KEY `unique_period` (year ASC, semester ASC))
-            ENGINE = InnoDB
-            $charset_collate;";
-    dbDelta($sql);
-
-    $sql="CREATE TABLE IF NOT EXISTS `$groupsTMPTable` (
-                grID int UNSIGNED NOT NULL COMMENT 'name of the group',
-                PRIMARY KEY (grID))
             ENGINE = InnoDB
             $charset_collate;";
     dbDelta($sql);

@@ -20,9 +20,9 @@ function utt_create_groups_overlaps_page(){
     <div class="wrap">
         <h2 id="groupOverlapTitle"> <?php _e("Insert Group Overlapping","UniTimetable"); ?> </h2>
         <form action="" name="groupForm" method="post">
-            <div class="element">
+            <div class="element firstInRow">
             <?php _e("Select Groups for Overlap","UniTimetable"); ?><br/>
-            <select multiple="multiple" id="ogroups" class="dirty" size=20 style='height: 50%;'>
+            <select multiple="multiple" id="ogroups1" class="dirty" size=20 style='height: 50%;'>
                 <?php
                 //fill select with groups
                 $groupsTable=$wpdb->prefix."utt_groups";
@@ -33,6 +33,21 @@ function utt_create_groups_overlaps_page(){
                 }
                 ?>
             </select>
+            </div>
+            <div class="element">
+            <?php _e("Select Groups for Overlap","UniTimetable"); ?><br/>
+            <select multiple="multiple" id="ogroups2" class="dirty" size=20 style='height: 50%;'>
+                <?php
+                //fill select with groups
+                $groupsTable=$wpdb->prefix."utt_groups";
+                $groups = $wpdb->get_results("SELECT * FROM $groupsTable;");
+                //translate classroom type
+                foreach($groups as $group){
+                    echo "<option value='$group->groupID'>$group->groupName</option>";
+                }
+                ?>
+            </select>
+            </div>
             <div id="secondaryButtonContainer">
                 <input type="submit" value="<?php _e("Submit","UniTimetable"); ?>" id="insert-updateGroupOverlaps" class="button-primary"/>
             </div>
@@ -56,7 +71,7 @@ add_action('wp_ajax_utt_delete_overlap', 'utt_delete_overlap');
 function utt_delete_overlap(){
     global $wpdb;
     $overlapTable=$wpdb->prefix."utt_overlap";
-    $safeSql = $wpdb->prepare("DELETE FROM $overlapTable WHERE groupOne = %d AND groupTwo = %d;", $_GET['g1_ID'], $_GET['g2_ID']);
+    $safeSql = $wpdb->prepare("DELETE FROM $overlapTable WHERE overlapID = %d;", $_GET['overlapID']);
     $success = $wpdb->query($safeSql);
     //if success is 1, delete succeeded
     echo $success;
@@ -71,19 +86,16 @@ function utt_insert_update_groups_overlaps(){
     $groupOverlapTable=$wpdb->prefix."utt_overlap";
     //data to be inserted/updated
     //$groupOverlaps[]=$_GET['groupOverlaps'];
-    foreach ($_GET['group_overlaps'] as $selectedOption){
-        $safeSql = $wpdb->prepare("INSERT INTO $groupsTMPTable (grID) VALUES (%d)",$selectedOption);
-        $success = $wpdb->query($safeSql);
+    $group_set_one=$_GET['group_overlaps1'];
+    $group_set_two=$_GET['group_overlaps2'];
+    foreach ($group_set_one as $grp_in_one){
+        foreach ($group_set_two as $grp_in_two){
+            if($grp_in_one != $grp_in_two) {
+                $safeSql = $wpdb->prepare("INSERT INTO $groupOverlapTable (groupOne, groupTwo) VALUES ($grp_in_one, $grp_in_two), ($grp_in_two, $grp_in_one);");
+                $success = $wpdb->query($safeSql);
+            }
+        }
     }
-    // inserting overlaps for current selection only
-    $allPairs = $wpdb->get_results("SELECT A.grID as valOne, B.grID as valTwo FROM $groupsTMPTable AS A, $groupsTMPTable AS B WHERE A.grID != B.grID");
-    foreach($allPairs as $pair){
-        $safeSql = $wpdb->prepare("INSERT INTO $groupOverlapTable (groupOne, groupTwo) VALUES ($pair->valOne, $pair->valTwo);");
-        $success = $wpdb->query($safeSql);
-    }
-    // truncate the GroupTMPTable
-    $safeSql = $wpdb->prepare("TRUNCATE TABLE $groupsTMPTable;");
-    $success = $wpdb->query($safeSql);
     echo $success;
     die();
 }
@@ -128,7 +140,7 @@ function utt_view_groups_overlaps(){
             $g1name=$wpdb->get_var("SELECT groupName FROM $groupsTable WHERE $group->groupOne = groupID;");
             $g2name=$wpdb->get_var("SELECT groupName FROM $groupsTable WHERE $group->groupTwo = groupID;");
             //echo "<tr id='$group->groupOne' $addClass><td>$group->groupOne $type</td><td>$group->groupTwo</td></tr>";
-            echo "<tr id='$group->groupOne' $addClass><td>$g1name $type</td><td>$g2name</td><td><a href='#' onclick='deleteOverlap($group->groupOne, $group->groupTwo);' class='deleteOverlap'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a></td></tr>";
+            echo "<tr id='$group->overlapID' $addClass><td>$g1name</td><td>$g2name</td><td><a href='#' onclick='deleteOverlap($group->overlapID);' class='deleteOverlap'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a></td></tr>";
         }
     ?>
             </tbody>

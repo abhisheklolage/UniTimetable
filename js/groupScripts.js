@@ -107,7 +107,6 @@ jQuery(function ($) {
             groups_number: groupsNumber
         };
         //ajax call
-        alert(data);
         $.get('admin-ajax.php' , data, function(data){
             success = data;
             //success
