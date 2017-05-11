@@ -111,7 +111,7 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    jQuery('#period').val(periodID);
    jQuery('#semester').val(semester);
    loadSubjects(subjectID);
-   loadGroups(groupID,periodID);
+   //loadGroups(groupID,periodID);
    jQuery('#teacher').val(teacherID);
    jQuery('#classroom').val(classroomID);
    start = start.split(" ");
@@ -176,6 +176,23 @@ function loadWorkHours(){
    //ajax call
    jQuery.get('admin-ajax.php', data, function(data){
       jQuery('#workloaddiv').html(data);
+   });
+   jQuery('#messages').html("");
+}
+//load the groups when a subject is selected
+function loadGroupsOnSubs(){
+   subject = jQuery('#subject').val();
+   period = jQuery('#period').val();
+   //ajax data
+   var data = {
+      action: 'utt_load_groups_on_subject',
+      subject: subject,
+      period: period
+   };
+   //ajax call
+   jQuery.get('admin-ajax.php', data, function(data){
+      jQuery('#groups').html("");
+      jQuery('#groups').html(data);
    });
    jQuery('#messages').html("");
 }
@@ -251,20 +268,7 @@ jQuery(function ($) {
          }
       });
    });
-   //when period is changed load groups (if semester and subject are selected)
-   $('#period').change(function(){
-      period = $('#period').val();
-      //ajax data
-      var data = {
-         action: 'utt_load_groups',
-         period: period,
-      };
-      //ajax call
-      $.get('admin-ajax.php' , data, function(data){
-         //groups combo-box reload
-         $('#groups').html(data);
-      });
-   })
+
    //load datepicker to date element
    $( "#date" ).datepicker({dateFormat: 'dd/mm/yy'});
     //timespinner options

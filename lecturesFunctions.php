@@ -240,6 +240,34 @@ function utt_load_groups(){
         echo "</select>";
         die();
 }
+//load groups combo-box when only subject selected - period semester selected
+//already
+add_action('wp_ajax_utt_load_groups_on_subject','utt_load_groups_on_subject');
+function utt_load_groups_on_subject(){
+        $subject = $_GET['subject'];
+        if(isset($_GET['selected'])){
+            $selected = $_GET['selected'];
+        }
+        global $wpdb;
+        $groupsTable = $wpdb->prefix."utt_groups";
+        $subjectsGroupsTable = $wpdb->prefix."utt_subjects_groups";
+        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE groupID in (SELECT groupID FROM $subjectsGroupsTable WHERE subjectID=%d);", $subject);
+        $groups = $wpdb->get_results($safeSql);
+        //echo $groups;
+        echo "<select name='group' id='group' class='dirty'>";
+        echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+        foreach($groups as $group){
+            //choose group selected when edit
+            if($selected==$group->groupID){
+                $select = "selected='selected'";
+            }else{
+                $select = "";
+            }
+            echo "<option value='$group->groupID' $select>$group->groupName</option>";
+        }
+        echo "</select>";
+        die();
+}
 //load subjects combo-box when period and semester selected
 add_action('wp_ajax_utt_load_subjects','utt_load_subjects');
 function utt_load_subjects(){
@@ -249,7 +277,7 @@ function utt_load_subjects(){
     $subjectsTable = $wpdb->prefix."utt_subjects";
     $safeSql = $wpdb->prepare("SELECT * FROM $subjectsTable WHERE semester=%d ORDER BY title;",$semester);
     $subjects = $wpdb->get_results($safeSql);
-    echo "<select name='subject' id='subject' class='dirty' onchange='loadGroups(0,0,0)'>";
+    echo "<select name='subject' id='subject' class='dirty' onchange='loadGroupsOnSubs()'>";
     echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
     foreach($subjects as $subject){
         //choose selected subjects when edit

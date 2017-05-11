@@ -97,7 +97,7 @@ function utt_insert_update_subjects_groups(){
             $success = $wpdb->query($safeSql);
         }
     }
-    //echo $success;
+    echo $success;
     die();
 }
 

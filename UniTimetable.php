@@ -155,7 +155,8 @@ function utt_activate(){
             overlapID int UNSIGNED NOT NULL AUTO_INCREMENT,
             groupOne int UNSIGNED NOT NULL COMMENT 'group that can have a overlap',
             groupTwo int UNSIGNED NOT NULL COMMENT 'group that can be overlapped with',
-            PRIMARY KEY (overlapID, groupOne, groupTwo),
+            PRIMARY KEY (overlapID),
+            UNIQUE KEY `unique_overlap` (groupOne ASC, groupTwo ASC),
             CONSTRAINT `fk_Groups1`
             FOREIGN KEY (groupOne)
             REFERENCES `$groupsTable` (groupID)
@@ -172,7 +173,8 @@ function utt_activate(){
             subjectGroupID int UNSIGNED NOT NULL AUTO_INCREMENT,
             subjectID int UNSIGNED NOT NULL COMMENT 'Subject to be mapped',
             groupID int UNSIGNED NOT NULL COMMENT 'Group that is mapped to',
-            PRIMARY KEY (subjectGroupID, subjectID, groupID),
+            PRIMARY KEY (subjectGroupID),
+            UNIQUE KEY `unique_subgrp` (subjectID ASC, groupID ASC),
             CONSTRAINT `fk_subjects_groups_map_subject`
             FOREIGN KEY (subjectID)
             REFERENCES `$subjectsTable` (subjectID)

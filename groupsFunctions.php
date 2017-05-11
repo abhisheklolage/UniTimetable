@@ -204,7 +204,6 @@ function utt_insert_update_group(){
     $counterStart=$_GET['counter_start'];
     $groupsNumber=$_GET['groups_number'];
     $groupsTable=$wpdb->prefix."utt_groups";
-    $success = 0;
     //echo "groupID=$groupID, periodID=$periodID, groupName=$groupName, couterStart=$counterStart, groupsNumber=$groupsNumber...";
     // if groupID is 0, it is insert
     if($groupID==0){
@@ -218,7 +217,6 @@ function utt_insert_update_group(){
             $counterStart ++;
             if($success != 1){
                 //if an insert fails, for breaks
-                echo "FAILED";
                 $success = 0;
                 break;
             }
