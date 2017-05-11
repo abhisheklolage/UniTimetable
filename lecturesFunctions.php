@@ -48,7 +48,7 @@ function utt_lecture_scripts(){
     wp_enqueue_script('globalizede', plugins_url('js/globalize.culture.de-DE.js', __FILE__));
     wp_enqueue_script('qtipjs', plugins_url('js/jquery.qtip.min.js', __FILE__));
     wp_enqueue_style( 'qtipcss',  plugins_url('css/jquery.qtip.min.css', __FILE__) );
-    
+
 }
 
 function utt_create_lectures_page(){
@@ -93,7 +93,7 @@ function utt_create_lectures_page(){
                     ?>
         </select>
             </div>
-    
+
             <div class="element firstInRow">
         <?php _e("Subject:","UniTimetable"); ?><br/>
         <div id="subjects">
@@ -112,7 +112,7 @@ function utt_create_lectures_page(){
                     </select>
         </div>
             </div>
-            
+
         <div class="element firstInRow">
             <?php _e("Teacher:","UniTimetable"); ?><br/>
             <select name="teacher" id="teacher" class="dirty" onchange="loadWorkHours();">
@@ -183,8 +183,8 @@ function utt_create_lectures_page(){
                 ?>
             </select>
         </div>
-            
-       
+
+
             <div id="secondaryButtonContainer">
                 <input type="submit" value="<?php _e("Submit","UniTimetable"); ?>" id="insert-updateLecture" class="button-primary"/>
                 <a href='#' class='button-secondary' id="clearLectureForm"><?php _e("Reset","UniTimetable"); ?></a>
@@ -222,26 +222,54 @@ function utt_create_lectures_page(){
 //load groups combo-box when period and subject selected
 add_action('wp_ajax_utt_load_groups','utt_load_groups');
 function utt_load_groups(){
-    $period = $_GET['period'];
-    $subject = $_GET['subject'];
-    if(isset($_GET['selected'])){
-        $selected = $_GET['selected'];
-    }
-    global $wpdb;
-    $groupsTable = $wpdb->prefix."utt_groups";
-    $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d AND subjectID=%d ORDER BY groupName;",$period,$subject);
-    $groups = $wpdb->get_results($safeSql);
-    echo "<select name='group' id='group' class='dirty'>";
-    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-    foreach($groups as $group){
-        //choose group selected when edit
-        if($selected==$group->groupID){
-            $select = "selected='selected'";
-        }else{
-            $select = "";
+        $period = $_GET['period'];
+        //$subject = $_GET['subject'];
+        if(isset($_GET['selected'])){
+            $selected = $_GET['selected'];
         }
-        echo "<option value='$group->groupID' $select>$group->groupName</option>";
-    }
+        global $wpdb;
+        $groupsTable = $wpdb->prefix."utt_groups";
+        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE periodID=%d ORDER BY groupName;",$period);
+        $groups = $wpdb->get_results($safeSql);
+        echo "<select name='group' id='group' class='dirty'>";
+        echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+        foreach($groups as $group){
+            //choose group selected when edit
+            if($selected==$group->groupID){
+                $select = "selected='selected'";
+            }else{
+                $select = "";
+            }
+            echo "<option value='$group->groupID' $select>$group->groupName</option>";
+        }
+        echo "</select>";
+        die();
+}
+//load groups combo-box when only subject selected - period semester selected
+//already
+add_action('wp_ajax_utt_load_groups_on_subject','utt_load_groups_on_subject');
+function utt_load_groups_on_subject(){
+        $subject = $_GET['subject'];
+        if(isset($_GET['selected'])){
+            $selected = $_GET['selected'];
+        }
+        global $wpdb;
+        $groupsTable = $wpdb->prefix."utt_groups";
+        $subjectsGroupsTable = $wpdb->prefix."utt_subjects_groups";
+        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable WHERE groupID in (SELECT groupID FROM $subjectsGroupsTable WHERE subjectID=%d);", $subject);
+        $groups = $wpdb->get_results($safeSql);
+        //echo $groups;
+        echo "<select name='group' id='group' class='dirty'>";
+        echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
+        foreach($groups as $group){
+            //choose group selected when edit
+            if($selected==$group->groupID){
+                $select = "selected='selected'";
+            }else{
+                $select = "";
+            }
+            echo "<option value='$group->groupID' $select>$group->groupName</option>";
+        }
     echo "</select>";
     die();
 }
@@ -254,7 +282,7 @@ function utt_load_subjects(){
     $subjectsTable = $wpdb->prefix."utt_subjects";
     $safeSql = $wpdb->prepare("SELECT * FROM $subjectsTable WHERE semester=%d ORDER BY title;",$semester);
     $subjects = $wpdb->get_results($safeSql);
-    echo "<select name='subject' id='subject' class='dirty' onchange='loadGroups(0,0,0)'>";
+    echo "<select name='subject' id='subject' class='dirty' onchange='loadGroupsOnSubs()'>";
     echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
     foreach($subjects as $subject){
         //choose selected subjects when edit
@@ -311,6 +339,7 @@ add_action('wp_ajax_utt_insert_update_lecture','utt_insert_update_lecture');
 function utt_insert_update_lecture(){
     global $wpdb;
     //data to be inserted/updated
+    $period=$_GET['period'];
     $lectureID=$_GET['lectureID'];
     $group=$_GET['group'];
     $teacher=$_GET['teacher'];
@@ -319,12 +348,16 @@ function utt_insert_update_lecture(){
     $time=$_GET['time'];
     $endTime=$_GET['endTime'];
     $weeks=$_GET['weeks'];
+    $val=$_GET['ogroup'];
     $maxwork=$_GET['maxwork'];
     $minwork=$_GET['minWork'];
     $assignedwork=$_GET['assignedwork'];
     $lecturesTable=$wpdb->prefix."utt_lectures";
     $eventsTable=$wpdb->prefix."utt_events";
     $teachersTable=$wpdb->prefix."utt_teachers";
+    $overlapTable=$wpdb->prefix."utt_overlap";
+    $tempTable=$wpdb->prefix."utt_temp";
+
     //is insert
     if($lectureID==0){
         //transaction in order to cancel inserts if something goes wrong
@@ -338,14 +371,14 @@ function utt_insert_update_lecture(){
         $datetime = $usedDate." ".$time;
         $endDatetime = $usedDate." ".$endTime;
         $assignedwork = $assignedwork + ($endTime - $time);
-           
+
         //insert records depending on weeks number
-        for ($j=0;$j<=$weeks-1;$j++){
+        for ($j=0;$j<=15;$j++){
             $d = new DateTime($date);
             //adds record to selected week, next loop adds to next week etc...
             $d->modify('+'.$j.' weeks');
             $usedDate = $d->format('y-m-d');
-            
+
             $datetime = $usedDate." ".$time;
             $endDatetime = $usedDate." ".$endTime;
             //check if there is conflict
@@ -353,13 +386,30 @@ function utt_insert_update_lecture(){
             $busyClassroom1 = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE classroomID=%d AND %s<end AND %s>start;",$classroom,$datetime,$endDatetime));
             $busyClassroom2 = $wpdb->get_row($wpdb->prepare("SELECT * FROM $eventsTable WHERE classroomID=%d AND %s<eventEnd AND %s>eventStart;",$classroom,$datetime,$endDatetime));
             $busyGroup = $wpdb->get_row($wpdb->prepare("SELECT * FROM $lecturesTable WHERE groupID=%d AND %s<end AND %s>start;",$group,$datetime,$endDatetime));
+            //check if overlapping is possible
+            $getGroupId = $wpdb->get_results($wpdb->prepare("SELECT * FROM $lecturesTable WHERE %s<end AND %s>start;", $datetime, $endDatetime));
+
+            $notOverLappable = "no";
+            if($getGroupId != "") { //only if this is not the first lecture of the slot
+                foreach($getGroupId as $grp){
+                    $overlapper = $wpdb->get_row($wpdb->prepare("SELECT * from $overlapTable WHERE groupOne=%d AND groupTwo=%d;", $grp->groupID, $group));
+                    if($overlapper === null){
+                        $notOverLappable = "yes";
+                        break;
+                    }
+                }
+            }
             //if there is conflict, exists becomes 1
-            if($busyTeacher!="" || $busyGroup!="" || $busyClassroom1!="" || $busyClassroom2!=""){
+            if($busyTeacher!="" || $busyGroup!="" || $busyClassroom1!="" || $busyClassroom2!="" || $notOverLappable === "yes"){
                 $exists = 1;
                 break;
             }else{
                 $safeSql = $wpdb->prepare("INSERT INTO $lecturesTable (groupID, classroomID, teacherID, start, end) VALUES( %d, %d, %d, %s, %s)",$group,$classroom,$teacher,$datetime,$endDatetime);
                 $wpdb->query($safeSql);
+                if($j == 0){
+                    $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $teacher);
+                    $wpdb->query($safeSql);
+                }
             }
         }
         //if exists is 0 then commit transaction
@@ -418,7 +468,7 @@ function utt_json_calendar(){
             break;
     }
     //start and end of week viewed
-    
+
     $lectures = $wpdb->get_results($safeSql);
     //array witch will be converted to json
     $jsonResponse = array();
@@ -544,15 +594,18 @@ function utt_delete_lecture(){
     if($deleteAll==1){
         $safeSql = $wpdb->prepare("DELETE FROM $lecturesTable WHERE groupID=%d ;",$lecture->groupID);
         $wpdb->query($safeSql);
+
         $enddate = explode(" ", $lecture->end);
         $startdate = explode(" ", $lecture->start);
         $diff = $enddate[1] - $startdate[1];
         $assignedwork = $lecture->assignedWorkLoad - $diff;
-    
+        //do only if the lecture if completely being removed from all 16 slots
         $safeSql = $wpdb->prepare("UPDATE $teachersTable SET assignedWorkLoad=%d WHERE teacherID=%d;", $assignedwork, $lecture->teacherID);
         $wpdb->query($safeSql);
-    //else delete only this lecture
-    }else{
+        //else delete only this lecture
+
+    }
+    else{
         $safeSql = $wpdb->prepare("DELETE FROM `$lecturesTable` WHERE lectureID=%d;",$lectureID);
         $wpdb->query($safeSql);
     }

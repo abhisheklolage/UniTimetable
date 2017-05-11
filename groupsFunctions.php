@@ -14,7 +14,6 @@ function utt_group_scripts(){
         'cancel' => __( 'Cancel', 'UniTimetable' ),
         'periodVal' => __( 'Please select a Period.', 'UniTimetable' ),
         'semesterVal' => __( 'Please select Semester.', 'UniTimetable' ),
-        'subjectVal' => __( 'Please select Subject.', 'UniTimetable' ),
         'nameVal' => __( 'Please avoid using special characters and do not use long names.', 'UniTimetable' ),
         'insertGroup' => __( 'Insert Group', 'UniTimetable' ),
         'reset' => __( 'Reset', 'UniTimetable' ),
@@ -50,36 +49,15 @@ function utt_create_groups_page(){
 		</select>
             </div>
             <div class="element">
-		<?php _e("Semester:","UniTimetable"); ?><br/>
-		<select name="semester" id="semester" class="dirty" onchange="loadSubjects(0);">
-                    <option value="0"><?php _e("- select -","UniTimetable"); ?></option>
-                    <?php
-                    //show semester numbers
-                    for( $i=1 ; $i<11 ; $i++ ){
-			echo "<option value='$i'>$i</option>";
-                    }
-                    ?>
-		</select>
-            </div>
-            <div class="element firstInRow">
-		<?php _e("Subject:","UniTimetable"); ?><br/>
-		<!-- load subjects when semester number is selected -->
-		<div id="subjects">
-		    <select name="subject" id="subject" class="dirty">
-			<option value='0'><?php _e("- select -","UniTimetable"); ?></option>
-		    </select>
-		</div>
-            </div>
-            <div class="element">
-		<!-- select number of groups to be created -->
-		<?php _e("Number of Groups:","UniTimetable"); ?><br/>
-		<select name="groupsNumber" id="groupsNumber" class="dirty">
-                    <?php
-                    for($i=1;$i<16;$i++){
-			echo "<option value=$i>$i</option>";
-                    }
-                    ?>
-		</select>
+            <!-- select number of groups to be created -->
+            <?php _e("Number of Groups:","UniTimetable"); ?><br/>
+            <select name="groupsNumber" id="groupsNumber" class="dirty">
+                <?php
+                for($i=1;$i<16;$i++){
+                    echo "<option value=$i>$i</option>";
+                }
+                ?>
+            </select>
             </div>
             <div class="element firstInRow groupsName">
 		<?php _e("Name of Groups (Prefix):","UniTimetable"); ?><br/>
@@ -154,54 +132,28 @@ function utt_create_groups_page(){
 add_action('wp_ajax_utt_view_groups','utt_view_groups');
 function utt_view_groups(){
     global $wpdb;
-    //get filter values
-    if(isset($_GET['period_id'])){
-        $periodID = $_GET['period_id'];
-        $semester = $_GET['semester'];
-	//if first time loaded, show results for current period and 1st semester
-    }else{
-        $periodsTable=$wpdb->prefix."utt_periods";
-        $periods = $wpdb->get_results( "SELECT * FROM $periodsTable ORDER BY year DESC");
-        $date = date("Y-m-d");
-        foreach($periods as $period){
-            $startDate = $period->year . "-01-01";
-            
-        }
-        $semester = 1;
-    }
-    //show registered groups
     $groupsTable = $wpdb->prefix."utt_groups";
-    $subjectsTable = $wpdb->prefix."utt_subjects";
+    //show registered groups
     //if not selected period, show nothing
-    if($periodID == ""){
-        $periodID=0;
-    }
-    //if not selected semester, show for all semesters
-    if($semester==0){
-        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable, $subjectsTable WHERE $groupsTable.subjectID=$subjectsTable.subjectID AND periodID=%d ORDER BY title, type, groupName",$periodID);
-    }else{
-        $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable, $subjectsTable WHERE $groupsTable.subjectID=$subjectsTable.subjectID AND periodID=%d AND semester=%d ORDER BY title, type, groupName",$periodID,$semester);
-    }
+    $safeSql = $wpdb->prepare("SELECT * FROM $groupsTable",$periodID);
     $groups = $wpdb->get_results($safeSql);
-?>
-<!-- show table of groups -->
-<table class="widefat bold-th">
-    <thead>
-        <tr>
-            <th><?php _e("Subject","UniTimetable"); ?></th>
-            <th><?php _e("Group","UniTimetable"); ?></th>
-            <th><?php _e("Actions","UniTimetable"); ?></th>
-        </tr>
-    </thead>
-    <tfoot>
-        <tr>
-            <th><?php _e("Subject","UniTimetable"); ?></th>
-            <th><?php _e("Group","UniTimetable"); ?></th>
-            <th><?php _e("Actions","UniTimetable"); ?></th>
-        </tr>
-    </tfoot>
-    <tbody>
-	<?php
+    ?>
+        <!-- show table of groups -->
+        <table class="widefat bold-th">
+            <thead>
+                <tr>
+                    <th><?php _e("Group","UniTimetable"); ?></th>
+                    <th><?php _e("Actions","UniTimetable"); ?></th>
+                </tr>
+            </thead>
+            <tfoot>
+                <tr>
+                    <th><?php _e("Group","UniTimetable"); ?></th>
+                    <th><?php _e("Actions","UniTimetable"); ?></th>
+                </tr>
+            </tfoot>
+            <tbody>
+    <?php
         //show grey and white records in order to be more recognizable
         $bgcolor = 1;
         foreach($groups as $group){
@@ -212,17 +164,10 @@ function utt_view_groups(){
                 $addClass = "class='white'";
                 $bgcolor = 1;
             }
-            if($group->type == "T"){
-                $type = __("T","UniTimetable");
-            }else if($group->type == "L"){
-                $type = __("L","UniTimetable");
-            }else{
-                $type = __("PE","UniTimetable");
-            }
             //a record
-            echo "<tr id='$group->groupID' $addClass><td>$group->title $type</td><td>$group->groupName</td>
+            echo "<tr id='$group->groupID' $addClass><td>$group->groupName</td>
                 <td><a href='#' onclick='deleteGroup($group->groupID);' class='deleteGroup'><img id='edit-delete-icon' src='".plugins_url('icons/delete_icon.png', __FILE__)."'/> ".__("Delete","UniTimetable")."</a>&nbsp;
-                <a href='#' onclick=\"editGroup($group->groupID,$group->periodID,$group->semester,$group->subjectID,'$group->groupName');\" class='editGroup'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
+                <a href='#' onclick=\"editGroup($group->groupID,$group->periodID,'$group->groupName');\" class='editGroup'><img id='edit-delete-icon' src='".plugins_url('icons/edit_icon.png', __FILE__)."'/> ".__("Edit","UniTimetable")."</a></td></tr>";
         }
 	?>
     </tbody>
@@ -238,12 +183,11 @@ function utt_insert_update_group(){
     //data to be inserted/updated
     $groupID=$_GET['group_id'];
     $periodID=$_GET['period_id'];
-    $subjectID=$_GET['subject_id'];
     $groupName=$_GET['group_name'];
     $counterStart=$_GET['counter_start'];
     $groupsNumber=$_GET['groups_number'];
     $groupsTable=$wpdb->prefix."utt_groups";
-    $success = 0;
+    //echo "groupID=$groupID, periodID=$periodID, groupName=$groupName, couterStart=$counterStart, groupsNumber=$groupsNumber...";
     // if groupID is 0, it is insert
     if($groupID==0){
         //transaction, so if an insert fails, it rolls back
@@ -251,7 +195,7 @@ function utt_insert_update_group(){
         for($i=1;$i<=$groupsNumber;$i++){
             //name is generated by prefix(groupName) and a number, starting from counterstart
             $nameUsed = $groupName.$counterStart;
-            $safeSql = $wpdb->prepare("INSERT INTO $groupsTable (periodID, subjectID, groupName) VALUES (%d,%d,%s)",$periodID,$subjectID,$nameUsed);
+            $safeSql = $wpdb->prepare("INSERT INTO $groupsTable (periodID, groupName) VALUES (%d,%s)",$periodID,$nameUsed);
             $success = $wpdb->query($safeSql);
             $counterStart ++;
             if($success != 1){
@@ -271,7 +215,7 @@ function utt_insert_update_group(){
         }
 	//it is edit
     }else{
-        $safeSql = $wpdb->prepare("UPDATE $groupsTable SET periodID=%d, subjectID=%d, groupName=%s WHERE groupID=%d ",$periodID,$subjectID,$groupName,$groupID);
+        $safeSql = $wpdb->prepare("UPDATE $groupsTable SET periodID=%d, groupName=%s WHERE groupID=%d ",$periodID,$groupName,$groupID);
         $success = $wpdb->query($safeSql);
         if ($success==1){
             echo 1;
@@ -291,39 +235,6 @@ function utt_delete_group(){
     $success = $wpdb->query($safeSql);
     //if success is 1, delete succeeded
     echo $success;
-    die();
-}
-//load subjects to combo-box when semester number is selected
-add_action('wp_ajax_utt_load_groupsubjects','utt_load_groupsubjects');
-function utt_load_groupsubjects(){
-    //semester number selected
-    $semester = $_GET['semester'];
-    //if edit, select the stored subject
-    $selected = $_GET['selected'];
-    global $wpdb;
-    $subjectsTable = $wpdb->prefix."utt_subjects";
-    $safeSql = $wpdb->prepare("SELECT * FROM $subjectsTable WHERE semester=%d ORDER BY title;",$semester);
-    $subjects = $wpdb->get_results($safeSql);
-    echo "<select name='subject' id='subject' class='dirty'>";
-    echo "<option value='0'>".__("- select -","UniTimetable")."</option>";
-    foreach($subjects as $subject){
-        //if edit, select the stored subject
-        if($selected==$subject->subjectID){
-            $select = "selected='selected'";
-        }else{
-            $select = "";
-        }
-        //translate subject type
-        if($subject->type == "T"){
-            $type = __("T","UniTimetable");
-        }else if($subject->type == "L"){
-            $type = __("L","UniTimetable");
-        }else{
-            $type = __("PE","UniTimetable");
-        }
-        echo "<option value='$subject->subjectID' $select>$subject->title $type</option>";
-    }
-    echo "</select>";
     die();
 }
 

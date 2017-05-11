@@ -19,7 +19,7 @@ function viewGroups(){
     return false;
 }
 //edit function
-function editGroup(groupID,periodID,semester,subjectID,groupName) {
+function editGroup(groupID,periodID,semester,groupName) {
     //if form is being completed it does not let you edit
     if (isDirty==1) {
         alert(groupStrings.editForbidden);
@@ -29,7 +29,6 @@ function editGroup(groupID,periodID,semester,subjectID,groupName) {
     document.getElementById('groupID').value=groupID;
     document.getElementById('period').value=periodID;
     document.getElementById('semester').value=semester;
-    loadGroupSubjects(subjectID);
     document.getElementById("groupsNumber").value=1;
     document.getElementById("groupsNumber").disabled = true;
     document.getElementById('groupsName').value=groupName;
@@ -40,21 +39,6 @@ function editGroup(groupID,periodID,semester,subjectID,groupName) {
     //form is now dirty
     isDirty = 1;
     return false;
-}
-//load subjects combo-box depending on semester selected
-function loadGroupSubjects(selected){
-   semester = jQuery('#semester').val();
-   //ajax data
-   var data = {
-      action: 'utt_load_groupsubjects',
-      semester: semester,
-      selected: selected
-   };
-   //ajax call
-   jQuery.get('admin-ajax.php', data, function(data){
-        //load combo-box
-      jQuery('#subjects').html(data);
-   });
 }
 //delete group function
 function deleteGroup(groupID){
@@ -87,21 +71,6 @@ function deleteGroup(groupID){
     }
     return false;
 }
-//load subjects combo-box depending on selected semester. Parameter selected is used for edit purposes
-function loadSubjects(selected){
-   semester = jQuery('#semester').val();
-   //ajax data
-   var data = {
-      action: 'utt_load_groupsubjects',
-      semester: semester,
-      selected: selected
-   };
-   //ajax call
-   jQuery.get('admin-ajax.php', data, function(data){
-    //load combo-box
-      jQuery('#subjects').html(data);
-   });
-}
 
 jQuery(function ($) {
     //submit form
@@ -110,7 +79,6 @@ jQuery(function ($) {
         var groupID = $('#groupID').val();
         var period = $('#period').val();
         var semester = $('#semester').val();
-        var subject = $('#subject').val();
         var groupsNumber = $('#groupsNumber').val();
         var groupsName = $('#groupsName').val();
         var counterStart = $('#counterStart').val();
@@ -125,10 +93,6 @@ jQuery(function ($) {
             alert(groupStrings.semesterVal);
             return false;
         }
-        if (subject == 0) {
-            alert(groupStrings.subjectVal);
-            return false;
-        }
         if (!regexGroupsName.test(groupsName)) {
             alert(groupStrings.nameVal);
             return false;
@@ -138,7 +102,6 @@ jQuery(function ($) {
             action: 'utt_insert_update_group',
             group_id: groupID,
             period_id: period,
-            subject_id: subject,
             group_name: groupsName,
             counter_start: counterStart,
             groups_number: groupsNumber
@@ -153,7 +116,7 @@ jQuery(function ($) {
                   $('#messages').html("<div id='message' class='updated'>"+groupStrings.successAdd+"</div>");
                 //edit
                }else{
-                  $('#messages').html("<div id='message' class='updated'>"+groupStrings.successEdit+"</div>"); 
+                  $('#messages').html("<div id='message' class='updated'>"+groupStrings.successEdit+"</div>");
                }
                //clear form
                 $('#groupTitle').html(groupStrings.insertGroup);
@@ -163,7 +126,6 @@ jQuery(function ($) {
                 $('.counterStart').show();
                 $('#counterStart').val(1);
                 $('#groupID').val(0);
-                $('#subject').val(0);
                 $('#groupsNumber').val(1);
                 isDirty = 0;
             //fail
@@ -195,7 +157,6 @@ jQuery(function ($) {
         $('#groupID').val(0);
         $('#period').val(0);
         $('#semester').val(0);
-        $('#subject').val(0);
         document.getElementById("groupsNumber").disabled = false;
         $('#groupsNumber').val(1);
         $('#groupsName').val(groupStrings.group);
@@ -210,5 +171,5 @@ jQuery(function ($) {
     $('.dirty').change(function(){
         isDirty = 1;
     })
-    
+
 });

@@ -13,7 +13,7 @@ function isDate(date){
    var d = date[0];
    var m = date[1];
    var y = date[2];
-   
+
    if (m<1 || m>12) {
       return false;
    }
@@ -111,7 +111,7 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    jQuery('#period').val(periodID);
    jQuery('#semester').val(semester);
    loadSubjects(subjectID);
-   loadGroups(groupID,periodID,subjectID);
+   //loadGroups(groupID,periodID);
    jQuery('#teacher').val(teacherID);
    jQuery('#classroom').val(classroomID);
    start = start.split(" ");
@@ -134,24 +134,20 @@ function editLecture(lectureID, periodID, semester, subjectID, groupID, teacherI
    loadWorkHours();
 }
 //load groups combo-box depending on period and subject. Selected parameter is used for autofill on edit
-function loadGroups(selected, period, subject) {
+function loadGroups(selected, period,) {
    if (period == 0) {
       period = jQuery('#period').val();
-   }
-   if (subject == 0) {
-      subject = jQuery('#subject').val();
    }
    //ajax data
    var data = {
       action: 'utt_load_groups',
       period: period,
-      subject: subject,
       selected: selected
    };
    //ajax call
    jQuery.get('admin-ajax.php' , data, function(data){
       //load groups combo-box
-      jQuery('#groups').html(data);                                                
+      jQuery('#groups').html(data);
    });
 }
 //load subjects when semester selected
@@ -180,6 +176,23 @@ function loadWorkHours(){
    //ajax call
    jQuery.get('admin-ajax.php', data, function(data){
       jQuery('#workloaddiv').html(data);
+   });
+   jQuery('#messages').html("");
+}
+//load the groups when a subject is selected
+function loadGroupsOnSubs(){
+   subject = jQuery('#subject').val();
+   period = jQuery('#period').val();
+   //ajax data
+   var data = {
+      action: 'utt_load_groups_on_subject',
+      subject: subject,
+      period: period
+   };
+   //ajax call
+   jQuery.get('admin-ajax.php', data, function(data){
+      jQuery('#groups').html("");
+      jQuery('#groups').html(data);
    });
    jQuery('#messages').html("");
 }
@@ -229,21 +242,21 @@ jQuery(function ($) {
                    alert('there was an error while fetching events!');
                }
             },
-   
+
             // any other sources...
 
          ],
-         loading: function (bool) { 
+         loading: function (bool) {
             if (bool)
                //show spinner when loading
-               $('#loadingImg').show(); 
-             else 
-               $('#loadingImg').hide(); 
+               $('#loadingImg').show();
+             else
+               $('#loadingImg').hide();
          },
          timeFormat: 'H:mm' ,
          eventRender: function(event, element) {
             if (event.buttons == false) {
-               
+
             }else{
                element.find('.fc-time').before($("<a href='javascript:;' onclick='deleteLecture("+event.lectureID+");' class='deleteLecture' title='Διαγραφή Διδασκαλίας'><div class='deleteLectureDiv'></div></a><a href='#' onclick='editLecture("+event.lectureID+","+event.periodID+","+event.semester+","+event.subjectID+","+event.groupID+","+event.teacherID+","+event.classroomID+",\""+event.start2+"\",\""+event.end2+"\");' class='editLecture' title='Επεξεργασία Διδασκαλίας'><div class='editLectureDiv'></div></a><br/>"));
             }
@@ -255,22 +268,7 @@ jQuery(function ($) {
          }
       });
    });
-   //when period is changed load groups (if semester and subject are selected)
-   $('#period').change(function(){
-      period = $('#period').val();
-      subject = $('#subject').val();
-      //ajax data
-      var data = {
-         action: 'utt_load_groups',
-         period: period,
-         subject: subject
-      };
-      //ajax call
-      $.get('admin-ajax.php' , data, function(data){
-         //groups combo-box reload
-         $('#groups').html(data);                                                
-      });
-   })
+
    //load datepicker to date element
    $( "#date" ).datepicker({dateFormat: 'dd/mm/yy'});
     //timespinner options
@@ -281,7 +279,7 @@ jQuery(function ($) {
          // hours
          page: 60
       },
- 
+
       _parse: function( value ) {
          if ( typeof value === "string" ) {
             // already a timestamp
@@ -292,7 +290,7 @@ jQuery(function ($) {
          }
          return value;
       },
- 
+
       _format: function( value ) {
          return Globalize.format( new Date(value), "t" );
       }
@@ -383,7 +381,7 @@ jQuery(function ($) {
                   $('#messages').html("<div id='message' class='updated'>"+lectureStrings.successAdd+"</div>");
                //edit
                }else{
-                  $('#messages').html("<div id='message' class='updated'>"+lectureStrings.successEdit+"</div>"); 
+                  $('#messages').html("<div id='message' class='updated'>"+lectureStrings.successEdit+"</div>");
                }
                //clear form
                $('#lectureTitle').html(lectureStrings.insertLecture);
@@ -447,5 +445,5 @@ jQuery(function ($) {
    $('.dirty').change(function(){
       isDirty = 1;
    })
-    
+
 });
